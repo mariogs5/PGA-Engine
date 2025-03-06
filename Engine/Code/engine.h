@@ -42,6 +42,25 @@ enum Mode
     Mode_Count
 };
 
+// Textured Quad
+struct VertexV3U2
+{
+    glm::vec3 pos;
+    glm::vec2 uv;
+};
+
+const VertexV3U2 vertices[] = {
+    { glm::vec3(-0.5, -0.5, 0.0), glm::vec2(0.0, 0.0) }, // bottom-left vertex
+    { glm::vec3(0.5, -0.5, 0.0), glm::vec2(1.0, 0.0) }, // bottom-right vertex
+    { glm::vec3(0.5,  0.5, 0.0), glm::vec2(1.0, 1.0) }, // top-right vertex
+    { glm::vec3(-0.5,  0.5, 0.0), glm::vec2(0.0, 1.0) }  // top-left vertex
+};
+
+const u16 indices[] = {
+    0, 1, 2,
+    0, 2, 3
+};
+
 struct App
 {
     // Loop
@@ -54,6 +73,7 @@ struct App
     // Graphics
     char gpuName[64];
     char openGlVersion[64];
+    std::string mOpenGLInfo;
 
     ivec2 displaySize;
 
@@ -73,6 +93,9 @@ struct App
     // Mode
     Mode mode;
 
+    // VAO object to link our screen filling quad with our textured quad shader
+    GLuint vao;
+
     // Embedded geometry (in-editor simple meshes such as
     // a screen filling quad, a cube, a sphere...)
     GLuint embeddedVertices;
@@ -80,9 +103,6 @@ struct App
 
     // Location of the texture uniform in the textured quad shader
     GLuint programUniformTexture;
-
-    // VAO object to link our screen filling quad with our textured quad shader
-    GLuint vao;
 };
 
 void Init(App* app);
@@ -92,4 +112,6 @@ void Gui(App* app);
 void Update(App* app);
 
 void Render(App* app);
+
+void Cleanup(App* app);
 

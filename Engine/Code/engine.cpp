@@ -182,9 +182,33 @@ void Init(App* app)
 {
     // TODO: Initialize your resources here!
     // - vertex buffers
+    // VBO (Vertex)
+    glGenBuffers(1, &app->embeddedVertices);
+    glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(vertices), vertices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
+
+    // EBO (indices)
+    glGenBuffers(1, &app->embeddedElements);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, 0);
+
+    // VAO
+    glGenVertexArrays(1, &app->vao);
+    glBindVertexArray(app->vao);
+    glBindBuffer(GL_ARRAY_BUFFER, app->embeddedVertices);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(VertexV3U2), (void*)0);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexV3U2), (void*)12);
+    glEnableVertexAttribArray(1);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
+    glBindVertexArray(0);
+
     // - element/index buffers
     // - vaos
     // - programs (and retrieve uniform indices)
+    app->texturedGeometryProgramIdx = LoadProgram(app, "./RENDER_QUAD.glsl", "RENDER_QUAD");
     // - textures
 
     app->mode = Mode_TexturedQuad;
@@ -221,6 +245,39 @@ void Render(App* app)
             break;
 
         default:;
+    }
+}
+
+void Cleanup(App* app)
+{
+    for (auto& texture : app->textures) 
+    {
+        glDeleteTextures(1, &texture.handle);
+        texture.handle = 0;
+    }
+
+    for (auto& program : app->programs)
+    {
+        glDeleteProgram(program.handle);
+        program.handle = 0;
+    }
+    
+    if (app->vao != 0) 
+    {
+        glDeleteVertexArrays(1, &app->vao);
+        app->vao = 0;
+    }
+
+    if (app->embeddedVertices != 0)
+    {
+        glDeleteBuffers(1, &app->embeddedVertices);
+        app->embeddedVertices = 0;
+    }
+
+    if (app->embeddedElements != 0)
+    {
+        glDeleteBuffers(1, &app->embeddedElements);
+        app->embeddedElements = 0;
     }
 }
 

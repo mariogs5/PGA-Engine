@@ -97,5 +97,8 @@
     <None Include="WorkingDir\shaders.glsl">
       <Filter>Shaders</Filter>
     </None>
+    <None Include="RENDER_QUAD.glsl">
+      <Filter>Shaders</Filter>
+    </None>
   </ItemGroup>
 </Project>
