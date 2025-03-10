@@ -50,10 +50,10 @@ struct VertexV3U2
 };
 
 const VertexV3U2 vertices[] = {
-    { glm::vec3(-0.5, -0.5, 0.0), glm::vec2(0.0, 0.0) }, // bottom-left vertex
-    { glm::vec3(0.5, -0.5, 0.0), glm::vec2(1.0, 0.0) }, // bottom-right vertex
-    { glm::vec3(0.5,  0.5, 0.0), glm::vec2(1.0, 1.0) }, // top-right vertex
-    { glm::vec3(-0.5,  0.5, 0.0), glm::vec2(0.0, 1.0) }  // top-left vertex
+    { glm::vec3(-1.0, -1.0, 0.0), glm::vec2(0.0, 0.0) }, // bottom-left vertex
+    { glm::vec3(1.0, -1.0, 0.0), glm::vec2(1.0, 0.0) }, // bottom-right vertex
+    { glm::vec3(1.0,  1.0, 0.0), glm::vec2(1.0, 1.0) }, // top-right vertex
+    { glm::vec3(-1.0,  1.0, 0.0), glm::vec2(0.0, 1.0) }  // top-left vertex
 };
 
 const u16 indices[] = {
