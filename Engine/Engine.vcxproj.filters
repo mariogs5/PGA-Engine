@@ -54,6 +54,9 @@
     <ClCompile Include="Code\BufferManagement.cpp">
       <Filter>Engine</Filter>
     </ClCompile>
+    <ClCompile Include="Code\ModelLoader.cpp">
+      <Filter>Engine</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="ThirdParty\imgui-docking\imconfig.h">
@@ -98,12 +101,18 @@
     <ClInclude Include="Code\BufferManagement.h">
       <Filter>Engine</Filter>
     </ClInclude>
+    <ClInclude Include="Code\ModelLoader.h">
+      <Filter>Engine</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="WorkingDir\shaders.glsl">
+    <None Include="WorkingDir\shaders\RENDER_GEOMETRY.glsl">
       <Filter>Shaders</Filter>
     </None>
-    <None Include="WorkingDir\RENDER_QUAD.glsl">
+    <None Include="WorkingDir\shaders\RENDER_QUAD.glsl">
+      <Filter>Shaders</Filter>
+    </None>
+    <None Include="WorkingDir\shaders\shaders.glsl">
       <Filter>Shaders</Filter>
     </None>
   </ItemGroup>

@@ -5,6 +5,7 @@
 #pragma once
 
 #include "platform.h"
+#include "ModelLoader.h"
 #include <glad/glad.h>
 
 typedef glm::vec2  vec2;
@@ -28,12 +29,22 @@ struct Texture
     std::string filepath;
 };
 
+struct VertexShaderAttribute {
+    u8 location;
+    u8 componentCount;
+};
+
+struct VertexShaderLayout {
+    std::vector<VertexShaderAttribute> attributes;
+};
+
 struct Program
 {
     GLuint             handle;
     std::string        filepath;
     std::string        programName;
     u64                lastWriteTimestamp; // What is this for?
+    VertexShaderLayout vertexInputLayout;
 };
 
 enum Mode
@@ -76,12 +87,18 @@ struct App
     std::string mOpenGLInfo;
 
     ivec2 displaySize;
+    
+    std::vector<Mesh> meshes;
+    std::vector<Material> materials;
+    std::vector<Model> models;
 
     std::vector<Texture>  textures;
     std::vector<Program>  programs;
 
     // program indices
     u32 texturedGeometryProgramIdx;
+    u32 texturedMeshProgramIdx;
+
     
     // texture indices
     u32 diceTexIdx;
