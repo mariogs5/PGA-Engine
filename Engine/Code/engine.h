@@ -50,6 +50,7 @@ struct Program
 enum Mode
 {
     Mode_TexturedQuad,
+    Mode_Forward_Geometry,
     Mode_Count
 };
 
@@ -95,9 +96,13 @@ struct App
     std::vector<Texture>  textures;
     std::vector<Program>  programs;
 
-    // program indices
+    // program index
     u32 texturedGeometryProgramIdx;
-    u32 texturedMeshProgramIdx;
+
+    // Patrick
+    u32 texturedMeshProgramIdx; // Program Index
+    u32 patrickIdx;             // Model Index
+    u32 patrickTextureUniform;  // Texture Index
 
     
     // texture indices
@@ -131,4 +136,8 @@ void Update(App* app);
 void Render(App* app);
 
 void Cleanup(App* app);
+
+GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
+
+void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vaoHandle);
 

@@ -2,7 +2,6 @@
 #define MODEL_LOADER_H
 
 #include "platform.h"
-#include "engine.h"
 
 #include <glad/glad.h>
 
@@ -11,6 +10,8 @@
 #include <assimp/postprocess.h>
 #include <vector>
 #include <string>
+
+struct App;
 
 struct VertexBufferAttribute {
     u8 location;
@@ -23,16 +24,16 @@ struct VertexBufferLayout {
     u8 stride;
 };
 
+struct Vao
+{
+    GLuint handle;
+    GLuint programHandle;
+};
+
 struct Model
 {
     u32 meshIdx;
     std::vector<u32>materialIdx;
-};
-
-struct VAO
-{
-    GLuint handle;
-    GLuint programHandle;
 };
 
 struct Submesh {
@@ -42,7 +43,7 @@ struct Submesh {
     u32 vertexOffset;
     u32 indexOffset;
 
-    std::vector<VAO> vaos;
+    std::vector<Vao> vaos;
 };
 
 struct Mesh {
@@ -53,19 +54,14 @@ struct Mesh {
 
 struct Material {
     std::string name;
-    vec3 albedo;
-    vec3 emissive;
+    glm::vec3 albedo;
+    glm::vec3 emissive;
     f32 smoothness;
     u32 albedoTextureIdx;
     u32 emissiveTextureIdx;
     u32 specularTextureIdx;
     u32 normalsTextureIdx;
     u32 bumpTextureIdx;
-};
-
-struct Model {
-    u32 meshIdx;
-    std::vector<u32> materialIdx;
 };
 
 // Declaraciones de funciones
