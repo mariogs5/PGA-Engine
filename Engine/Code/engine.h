@@ -6,6 +6,8 @@
 
 #include "platform.h"
 #include "ModelLoader.h"
+#include "Camera.h"
+
 #include <glad/glad.h>
 
 typedef glm::vec2  vec2;
@@ -73,6 +75,14 @@ const u16 indices[] = {
     0, 2, 3
 };
 
+struct OpenGLInfo {
+    std::string version;
+    std::string renderer;
+    std::string vendor;
+    std::string glslVersion;
+    std::vector<std::string> extensions;
+};
+
 struct App
 {
     // Loop
@@ -118,6 +128,10 @@ struct App
     // VAO object to link our screen filling quad with our textured quad shader
     GLuint vao;
 
+    GLint maxUniformBufferSize;
+    GLint uniformBlockAlignment;
+    GLuint bufferHandle;
+
     // Embedded geometry (in-editor simple meshes such as
     // a screen filling quad, a cube, a sphere...)
     GLuint embeddedVertices;
@@ -125,6 +139,12 @@ struct App
 
     // Location of the texture uniform in the textured quad shader
     GLuint programUniformTexture;
+
+    // --- Camera --- //
+    Camera camera;
+
+    // --- OpenGl Info --- //
+    OpenGLInfo glInfo;
 };
 
 void Init(App* app);
@@ -140,4 +160,6 @@ void Cleanup(App* app);
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vaoHandle);
+
+OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo);
 

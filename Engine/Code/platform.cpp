@@ -200,31 +200,6 @@ int main()
 
     GlobalFrameArenaMemory = (u8*)malloc(GLOBAL_FRAME_ARENA_SIZE);
 
-    // Start of getting OpenGL Info
-    std::cout << "OpenGL version: " << std::endl;
-    std::cout << glGetString(GL_VERSION) << std::endl << std::endl;
-
-    std::cout << "OpenGL renderer: " << std::endl;
-    std::cout << glGetString(GL_RENDERER) << std::endl << std::endl;
-
-    std::cout << "OpenGL vendor: " << std::endl;
-    std::cout << glGetString(GL_VENDOR) << std::endl << std::endl;
-
-    std::cout << "OpenGL GLSL version: " << std::endl;
-    std::cout << glGetString(GL_SHADING_LANGUAGE_VERSION) << std::endl << std::endl;
-
-    std::cout << "OpenGL extensions:" << std::endl;
-    GLint num_extensions;
-    glGetIntegerv(GL_NUM_EXTENSIONS, &num_extensions);
-
-    for (int i = 0; i < num_extensions; ++i) {
-        const unsigned char* str = glGetStringi(GL_EXTENSIONS, GLuint(i));
-        std::cout << str << " ";
-    }
-    std::cout << std::endl;
-
-    // End of getting OpenGL Info
-
     Init(&app);
 
     while (app.isRunning)

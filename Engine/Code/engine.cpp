@@ -199,6 +199,8 @@ u32 LoadTexture2D(App* app, const char* filepath)
 
 void Init(App* app)
 {
+    app->glInfo = GetOpenGLInfo(app->glInfo);
+
     glEnable(GL_DEPTH_TEST);
 
     // TODO: Initialize your resources here!
@@ -245,13 +247,59 @@ void Init(App* app)
     app->patrickTextureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
     app->patrickIdx = LoadModel(app, "Patrick/Patrick.obj");
 
+    // --- Start Camera Code --- //
+    app->camera.position = glm::vec3(0, 0, -5);
+    app->camera.target = glm::vec3(0, 0, 0);
+    app->camera.upVector = glm::vec3(1, 1, 1);
+
+    float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
+    float znear = 0.1f;
+    float zfar = 1000.0f;
+
+    glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspectRatio, znear, zfar);
+    glm::mat4 view = glm::lookAt(app->camera.position, app->camera.target, app->camera.upVector);
+
+    glm::mat4 world = TransformPositionScale(vec3(2.5f, 1.5f, -2.0f), vec3(0.45f));
+
+    glm::mat4 worldViewProjection = projection * view * world;
+    // --- End Camera Code --- //
+
+    // --- Create Uniforms --- //
+
+    // Query OpenGL limits
+    glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
+
+    glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
+
+    // Create a Uniform Buffer Object
+    glGenBuffers(1, &app->bufferHandle);
+    glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
+    glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
+    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+
     app->mode = Mode_Forward_Geometry;
 }
 
 void Gui(App* app)
 {
     ImGui::Begin("Info");
-    ImGui::Text("FPS: %f", 1.0f/app->deltaTime);
+    ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
+
+    ImGui::Separator();
+    ImGui::Text("Version: %s", app->glInfo.version.c_str());
+    ImGui::Text("Renderer: %s", app->glInfo.renderer.c_str());
+    ImGui::Text("Vendor: %s", app->glInfo.vendor.c_str());
+    ImGui::Text("GLSL Version: %s", app->glInfo.glslVersion.c_str());
+
+    ImGui::Separator();
+    ImGui::Text("Extensions (%d):", static_cast<int>(app->glInfo.extensions.size()));
+
+    ImGui::BeginChild("##extensions", ImVec2(0, 200), true);
+    for (const auto& ext : app->glInfo.extensions) {
+        ImGui::Text("%s", ext.c_str());
+    }
+    ImGui::EndChild();
+
     ImGui::End();
 }
 
@@ -266,8 +314,6 @@ void Render(App* app)
     {
         case Mode_TexturedQuad:
         {
-            // TODO: Draw your textured quad here!
-
             glClearColor(0.f, 0.f, 0.f, 1.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
@@ -437,5 +483,24 @@ void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vao
     }
 
     glBindVertexArray(0);
+}
+
+OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo)
+{
+    glInfo.version = reinterpret_cast<const char*>(glGetString(GL_VERSION));
+    glInfo.renderer = reinterpret_cast<const char*>(glGetString(GL_RENDERER));
+    glInfo.vendor = reinterpret_cast<const char*>(glGetString(GL_VENDOR));
+    glInfo.glslVersion = reinterpret_cast<const char*>(glGetString(GL_SHADING_LANGUAGE_VERSION));
+
+    // Get extensions
+    GLint numExtensions;
+    glGetIntegerv(GL_NUM_EXTENSIONS, &numExtensions);
+    glInfo.extensions.reserve(numExtensions);
+    for (int i = 0; i < numExtensions; ++i) {
+        const GLubyte* extension = glGetStringi(GL_EXTENSIONS, i);
+        glInfo.extensions.emplace_back(reinterpret_cast<const char*>(extension));
+    }
+
+    return glInfo;
 }
 
