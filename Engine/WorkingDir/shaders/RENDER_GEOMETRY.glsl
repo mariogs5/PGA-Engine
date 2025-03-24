@@ -9,7 +9,22 @@ layout(location = 2) in vec2 aTexCoord;
 layout(location = 3) in vec2 aTangent;
 layout(location = 4) in vec2 aBitangent;
 
-layout(binding = 1, std140) uniform LocalParams {
+struct Light {
+    unsigned int type;
+    glm::vec3 color;
+    glm::vec3 direction;
+    glm::vec3 position;
+};
+
+layout(binding = 0, std140) uniform GlobalParams 
+{
+    vec3 uCameraPosition;
+    unsigned int uLightCount;
+    Light uLight[16];
+};
+
+layout(binding = 1, std140) uniform EntityParams 
+{
     mat4 uWorldMatrix;
     mat4 uWorldViewProjectionMatrix;
 };
@@ -24,12 +39,26 @@ void main()
     vTexCoord = aTexCoord;
     vPosition = vec3(uWorldMatrix * vec4(aPosition, 1.0));
     vNormal = vec3(uWorldMatrix * vec4(aNormal, 0.0));
+    vViewDir = uCameraPosition - vPosition;
     gl_Position = uWorldViewProjectionMatrix * vec4(aPosition, 1.0);
 }
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
-in vec2 vTexCoord;
+struct Light {
+    unsigned int type;
+    glm::vec3 color;
+    glm::vec3 direction;
+    glm::vec3 position;
+};
+
+layout(binding = 0, std140) uniform GlobalParams 
+{
+    vec3 uCameraPosition;
+    unsigned int uLightCount;
+    Light uLight[16];
+};
+
 in vec2 vTexCoord;
 in vec3 vPosition;
 in vec3 vNormal;

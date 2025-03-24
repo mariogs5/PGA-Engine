@@ -7,6 +7,7 @@
 #include "platform.h"
 #include "ModelLoader.h"
 #include "Camera.h"
+#include "BufferManagement.h"
 
 #include <glad/glad.h>
 
@@ -61,6 +62,28 @@ struct VertexV3U2
 {
     glm::vec3 pos;
     glm::vec2 uv;
+};
+
+struct Entity 
+{
+    glm::mat4 worldMatrix;
+    u32 modelIndex;
+    u32 entityBufferOffset;
+    u32 entityBufferSize;
+};
+
+enum LightType
+{
+    LightType_Directional, 
+    LightType_Point  
+};
+
+struct Light
+{
+    LightType type; 
+    vec3 color;        
+    vec3 direction;    
+    vec3 position;   
 };
 
 const VertexV3U2 vertices[] = {
@@ -145,6 +168,13 @@ struct App
 
     // --- OpenGl Info --- //
     OpenGLInfo glInfo;
+
+    // --- Uniform Buffers --- //
+    Buffer globalUBO;
+    Buffer entityUBO;
+
+    std::vector<Entity> entities;
+    std::vector<Light> lights;
 };
 
 void Init(App* app);

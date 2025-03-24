@@ -10,6 +10,11 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 
+void CreateEntity(App* app, const u32 aModelIdx, const glm::mat4& aVP, const glm::mat4& aPos) 
+{
+    // TODO: Hacer que las entidades se creen con esta funcion para tener un codigo mas limpio
+}
+
 GLuint CreateProgramFromSource(String programSource, const char* shaderName)
 {
     GLchar  infoLogBuffer[1024] = {};
@@ -241,16 +246,18 @@ void Init(App* app)
     app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
 
 
-    // Models
+    // Patrick
     app->texturedMeshProgramIdx = LoadProgram(app, "shaders/RENDER_GEOMETRY.glsl", "RENDER_GEOMETRY");
     Program& ModelProgram = app->programs[app->texturedMeshProgramIdx];
     app->patrickTextureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
     app->patrickIdx = LoadModel(app, "Patrick/Patrick.obj");
 
+    // Plane
+
     // --- Start Camera Code --- //
-    app->camera.position = glm::vec3(0, 0, -5);
+    app->camera.position = glm::vec3(0, 10, 25);
     app->camera.target = glm::vec3(0, 0, 0);
-    app->camera.upVector = glm::vec3(1, 1, 1);
+    app->camera.upVector = glm::vec3(0, 1, 0);
 
     float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
     float znear = 0.1f;
@@ -258,24 +265,58 @@ void Init(App* app)
 
     glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspectRatio, znear, zfar);
     glm::mat4 view = glm::lookAt(app->camera.position, app->camera.target, app->camera.upVector);
-
-    glm::mat4 world = TransformPositionScale(vec3(2.5f, 1.5f, -2.0f), vec3(0.45f));
-
-    glm::mat4 worldViewProjection = projection * view * world;
     // --- End Camera Code --- //
 
     // --- Create Uniforms --- //
-
-    // Query OpenGL limits
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
-
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
-    // Create a Uniform Buffer Object
-    glGenBuffers(1, &app->bufferHandle);
-    glBindBuffer(GL_UNIFORM_BUFFER, app->bufferHandle);
-    glBufferData(GL_UNIFORM_BUFFER, app->maxUniformBufferSize, NULL, GL_STREAM_DRAW);
-    glBindBuffer(GL_UNIFORM_BUFFER, 0);
+    // --- Global UBO --- //
+    Light sun = { LightType_Directional, vec3(1.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    app->lights.push_back(sun);
+
+    app->lights.push_back(sun);
+
+    app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
+    MapBuffer(app->globalUBO, GL_WRITE_ONLY);
+    PushVec3(app->globalUBO, app->camera.position);
+
+    PushUInt(app->globalUBO, app->lights.size());
+    for (u32 i = 0; i < app->lights.size(); ++i)
+    {
+        AlignHead(app->globalUBO, sizeof(vec4));
+
+        Light& light = app->lights[i];
+        PushUInt(app->globalUBO, light.type);
+        PushVec3(app->globalUBO, light.color);
+        PushVec3(app->globalUBO, light.direction);
+        PushVec3(app->globalUBO, light.position);
+    }
+
+    UnmapBuffer(app->globalUBO);
+
+    // --- Entities UBO --- //
+    app->entityUBO = CreateConstantBuffer(app->maxUniformBufferSize);
+    MapBuffer(app->entityUBO, GL_WRITE_ONLY);
+    glm::mat4 VP = projection * view;
+    for (int z = -2; z != 2; ++z) 
+    {
+        for (int x = -2; x != 2; ++x)
+        {
+            AlignHead(app->entityUBO, app->uniformBlockAlignment);
+            Entity entity;
+            entity.entityBufferOffset = app->entityUBO.head;
+            entity.worldMatrix = glm::translate(glm::vec3(x * 5, 0, z * 5));
+            entity.modelIndex = app->patrickIdx;
+
+            PushMat4(app->entityUBO, entity.worldMatrix);
+            PushMat4(app->entityUBO, VP * entity.worldMatrix);
+            entity.entityBufferSize = app->entityUBO.head - entity.entityBufferOffset;
+           
+            app->entities.push_back(entity);
+        }
+    }
+    UnmapBuffer(app->entityUBO);
 
     app->mode = Mode_Forward_Geometry;
 }
@@ -347,22 +388,31 @@ void Render(App* app)
             Program& textureMeshProgram = app->programs[app->texturedMeshProgramIdx];
             glUseProgram(textureMeshProgram.handle);
 
-            Model& model = app->models[app->patrickIdx];
-            Mesh& mesh = app->meshes[model.meshIdx];
+            glBindBufferRange(GL_UNIFORM_BUFFER, 0, app->globalUBO.handle, 0, app->globalUBO.size);
 
-            for (u32 i = 0; i < mesh.submeshes.size(); ++i) {
-                GLuint vao = FindVAO(mesh, i, textureMeshProgram);
-                glBindVertexArray(vao);
+            for (const auto& entity : app->entities) 
+            {
+                glBindBufferRange(GL_UNIFORM_BUFFER, 1, app->entityUBO.handle, entity.entityBufferOffset, entity.entityBufferSize);
 
-                u32 submeshMaterialIdx = model.materialIdx[i];
-                Material& submeshMaterial = app->materials[submeshMaterialIdx];
+                Model& model = app->models[app->patrickIdx];
+                Mesh& mesh = app->meshes[model.meshIdx];
 
-                glActiveTexture(GL_TEXTURE0);
-                glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-                glUniform1i(app->patrickTextureUniform, 0);
+                for (u32 i = 0; i < mesh.submeshes.size(); ++i) {
+                    GLuint vao = FindVAO(mesh, i, textureMeshProgram);
+                    glBindVertexArray(vao);
 
-                Submesh& submesh = mesh.submeshes[i];
-                glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+                    u32 submeshMaterialIdx = model.materialIdx[i];
+                    Material& submeshMaterial = app->materials[submeshMaterialIdx];
+
+                    glActiveTexture(GL_TEXTURE0);
+                    glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+                    glUniform1i(app->patrickTextureUniform, 0);
+
+                    Submesh& submesh = mesh.submeshes[i];
+                    glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
+
+                    glBindTexture(GL_TEXTURE_2D, 0);
+                }
             }
         }
         break;
