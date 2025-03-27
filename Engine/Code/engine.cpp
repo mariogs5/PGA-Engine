@@ -561,6 +561,40 @@ void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vao
     glBindVertexArray(0);
 }
 
+void CreateFBO(App* app, FrameBuffer& oldBuffer)
+{
+    // Eliminar el FBO antiguo antes de crear otro
+
+    for(size_t i = 0; i < 1; ++i)
+    {
+        // Framebuffer
+        GLuint colorAttachment;
+        glGenTextures(1, &colorAttachment);
+        glBindTexture(GL_TEXTURE_2D, colorAttachment);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        app->primaryFBO.attachments.push_back({ GL_COLOR_ATTACHMENT0 + i,colorAttachment });
+
+        GLuint depthAttachment;
+        glGenTextures(1, &depthAttachment);
+        glBindTexture(GL_TEXTURE_2D, depthAttachment);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+        app->primaryFBO.depthHandle = depthAttachment;
+    }
+}
+
 OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo)
 {
     glInfo.version = reinterpret_cast<const char*>(glGetString(GL_VERSION));

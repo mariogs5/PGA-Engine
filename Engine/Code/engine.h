@@ -86,6 +86,15 @@ struct Light
     vec3 position;   
 };
 
+struct FrameBuffer 
+{
+    GLuint FBOHandle;
+    vec2 bufferSize;
+    std::vector<GLuint> textures;
+    std::vector<std::pair<GLenum,GLuint>> attachments;
+    GLuint depthHandle;
+};
+
 const VertexV3U2 vertices[] = {
     { glm::vec3(-1.0, -1.0, 0.0), glm::vec2(0.0, 0.0) }, // bottom-left vertex
     { glm::vec3(1.0, -1.0, 0.0), glm::vec2(1.0, 0.0) }, // bottom-right vertex
@@ -175,6 +184,8 @@ struct App
 
     std::vector<Entity> entities;
     std::vector<Light> lights;
+
+    FrameBuffer primaryFBO;
 };
 
 void UpdateLights(App* app);
@@ -192,6 +203,8 @@ void Cleanup(App* app);
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vaoHandle);
+
+void CreateFBO(App* app);
 
 OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo);
 
