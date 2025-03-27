@@ -177,6 +177,8 @@ struct App
     std::vector<Light> lights;
 };
 
+void UpdateLights(App* app);
+
 void Init(App* app);
 
 void Gui(App* app);

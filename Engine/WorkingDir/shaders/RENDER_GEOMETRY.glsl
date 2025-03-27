@@ -11,9 +11,9 @@ layout(location = 4) in vec2 aBitangent;
 
 struct Light {
     unsigned int type;
-    glm::vec3 color;
-    glm::vec3 direction;
-    glm::vec3 position;
+    vec3 color;
+    vec3 direction;
+    vec3 position;
 };
 
 layout(binding = 0, std140) uniform GlobalParams 
@@ -47,9 +47,9 @@ void main()
 
 struct Light {
     unsigned int type;
-    glm::vec3 color;
-    glm::vec3 direction;
-    glm::vec3 position;
+    vec3 color;
+    vec3 direction;
+    vec3 position;
 };
 
 layout(binding = 0, std140) uniform GlobalParams 
@@ -68,9 +68,52 @@ uniform sampler2D uTexture;
 
 layout(location = 0) out vec4 oColor;
 
+
+vec3 CalcPointLight(Light aLight, vec3 aNormal, vec3 aPosition, vec3 aViewDir)
+{
+    vec3 lightDir = normalize(aLight.position - aPosition);
+    float diff = max(dot(aNormal, lightDir), 0.0);
+    vec3 reflectDir = reflect(-lightDir, aNormal);
+    float spec = pow(max(dot(aViewDir, reflectDir), 0.0), 2.0);
+
+    float distance = length(aLight.position - aPosition);
+
+    float constant = 1.0f;
+    float linear = 0.09f;
+    float quadratic = 0.032f;
+    float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
+
+    vec3 ambient = aLight.color * 0.2;
+    vec3 diffuse = aLight.color * diff;
+    vec3 specular = 0.1 * spec * aLight.color;
+
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+    return (ambient + diffuse + specular);
+}
+
 void main()
 {
-    oColor = texture(uTexture, vTexCoord);
+    vec3 returnColor = vec3(0.0);
+
+    for (int i = 0; i < uLightCount; ++i) 
+    {  
+        switch(uLight[i].type)
+        {
+            case 0:
+            // Directional Light
+
+            break;
+
+            case 1:
+                returnColor += CalcPointLight(uLight[i], vNormal, vPosition, vViewDir);
+            break;
+        }
+        
+    }
+
+    oColor = vec4(returnColor, 1.0);
 }
 
 #endif

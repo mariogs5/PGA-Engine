@@ -202,6 +202,27 @@ u32 LoadTexture2D(App* app, const char* filepath)
     }
 }
 
+void UpdateLights(App* app)
+{
+    app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
+    MapBuffer(app->globalUBO, GL_WRITE_ONLY);
+    PushVec3(app->globalUBO, app->camera.position);
+
+    PushUInt(app->globalUBO, app->lights.size());
+    for (u32 i = 0; i < app->lights.size(); ++i)
+    {
+        AlignHead(app->globalUBO, sizeof(vec4));
+
+        Light& light = app->lights[i];
+        PushUInt(app->globalUBO, light.type);
+        PushVec3(app->globalUBO, light.color);
+        PushVec3(app->globalUBO, light.direction);
+        PushVec3(app->globalUBO, light.position);
+    }
+
+    UnmapBuffer(app->globalUBO);
+}
+
 void Init(App* app)
 {
     app->glInfo = GetOpenGLInfo(app->glInfo);
@@ -271,12 +292,17 @@ void Init(App* app)
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
+    // --- Lights --- //
+    Light sun = { LightType_Directional, vec3(0.2, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    app->lights.push_back(sun);
+
+    Light b = { LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    app->lights.push_back(b);
+
+    Light c = { LightType_Point, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    app->lights.push_back(c);
+
     // --- Global UBO --- //
-    Light sun = { LightType_Directional, vec3(1.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
-    app->lights.push_back(sun);
-
-    app->lights.push_back(sun);
-
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
     MapBuffer(app->globalUBO, GL_WRITE_ONLY);
     PushVec3(app->globalUBO, app->camera.position);
