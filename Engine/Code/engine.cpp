@@ -206,7 +206,7 @@ void UpdateLights(App* app)
 {
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
     MapBuffer(app->globalUBO, GL_WRITE_ONLY);
-    PushVec3(app->globalUBO, app->camera.position);
+    PushVec3(app->globalUBO, app->camera.GetPosition());
 
     PushUInt(app->globalUBO, app->lights.size());
     for (u32 i = 0; i < app->lights.size(); ++i)
@@ -275,37 +275,40 @@ void Init(App* app)
 
     // Plane
 
-    // --- Start Camera Code --- //
-    app->camera.position = glm::vec3(0, 10, 25);
-    app->camera.target = glm::vec3(0, 0, 0);
-    app->camera.upVector = glm::vec3(0, 1, 0);
+    // --- Start Old Camera Code --- //
+    //app->camera.position = glm::vec3(0, 10, 25);
+    //app->camera.target = glm::vec3(0, 0, 0);
+    //app->camera.upVector = glm::vec3(0, 1, 0);
 
-    float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
-    float znear = 0.1f;
-    float zfar = 1000.0f;
+    //float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
+    //float znear = 0.1f;
+    //float zfar = 1000.0f;
 
-    glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspectRatio, znear, zfar);
-    glm::mat4 view = glm::lookAt(app->camera.position, app->camera.target, app->camera.upVector);
-    // --- End Camera Code --- //
+    //glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspectRatio, znear, zfar);
+    //glm::mat4 view = glm::lookAt(app->camera.position, app->camera.target, app->camera.upVector);
+    // --- End Old Camera Code --- //
 
     // --- Create Uniforms --- //
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
     // --- Lights --- //
-    Light sun = { LightType_Directional, vec3(0.2, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    Light sun = { "Sun light", LightType_Directional, vec3(0.2, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
     app->lights.push_back(sun);
 
-    Light b = { LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0)};
     app->lights.push_back(b);
 
-    Light c = { LightType_Point, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    Light c = { "Point 1", LightType_Point, vec3(0.0, 0.2, 0.0), vec3(100.0, -1.0, 0.0), vec3(0.0)};
     app->lights.push_back(c);
+
+    Light d = { "Point  1", LightType_Point, vec3(0.2, 0.0, 0.0), vec3(-100.0, -1.0, 0.0), vec3(0.0)};
+    app->lights.push_back(d);
 
     // --- Global UBO --- //
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
     MapBuffer(app->globalUBO, GL_WRITE_ONLY);
-    PushVec3(app->globalUBO, app->camera.position);
+    PushVec3(app->globalUBO, app->camera.GetPosition());
 
     PushUInt(app->globalUBO, app->lights.size());
     for (u32 i = 0; i < app->lights.size(); ++i)
@@ -324,7 +327,7 @@ void Init(App* app)
     // --- Entities UBO --- //
     app->entityUBO = CreateConstantBuffer(app->maxUniformBufferSize);
     MapBuffer(app->entityUBO, GL_WRITE_ONLY);
-    glm::mat4 VP = projection * view;
+    glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
     for (int z = -2; z != 2; ++z) 
     {
         for (int x = -2; x != 2; ++x)
@@ -349,23 +352,99 @@ void Init(App* app)
 
 void Gui(App* app)
 {
+    ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
+
     ImGui::Begin("Info");
+    ImGui::Spacing();
     ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
 
+    ImGui::Spacing();
     ImGui::Separator();
-    ImGui::Text("Version: %s", app->glInfo.version.c_str());
-    ImGui::Text("Renderer: %s", app->glInfo.renderer.c_str());
-    ImGui::Text("Vendor: %s", app->glInfo.vendor.c_str());
-    ImGui::Text("GLSL Version: %s", app->glInfo.glslVersion.c_str());
+    ImGui::Spacing();
 
-    ImGui::Separator();
-    ImGui::Text("Extensions (%d):", static_cast<int>(app->glInfo.extensions.size()));
+    if (ImGui::TreeNode("OpenGL Info"))
+    {
+        ImGui::Text("Version: %s", app->glInfo.version.c_str());
+        ImGui::Text("Renderer: %s", app->glInfo.renderer.c_str());
+        ImGui::Text("Vendor: %s", app->glInfo.vendor.c_str());
+        ImGui::Text("GLSL Version: %s", app->glInfo.glslVersion.c_str());
 
-    ImGui::BeginChild("##extensions", ImVec2(0, 200), true);
-    for (const auto& ext : app->glInfo.extensions) {
-        ImGui::Text("%s", ext.c_str());
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::Text("Extensions (%d):", static_cast<int>(app->glInfo.extensions.size()));
+
+        ImGui::BeginChild("##extensions", ImVec2(0, 200), true);
+        for (const auto& ext : app->glInfo.extensions) {
+            ImGui::Text("%s", ext.c_str());
+        }
+        ImGui::EndChild();
+
+        ImGui::TreePop();
     }
-    ImGui::EndChild();
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (ImGui::TreeNode("Lights"))
+    {
+        ImGui::Spacing();
+
+        bool lightChanged = false;
+
+        for (auto& light : app->lights)
+        {
+            ImGui::Text(light.name.c_str());
+            vec3 checkVector;
+
+            ImGui::PushID(&light);
+            float color[3] = { light.color.x, light.color.y ,light.color.z };
+            ImGui::DragFloat3("Color", color, 0.01, 0.0, 1.0);
+            checkVector = vec3(color[0], color[1], color[2]);
+
+            if (checkVector != light.color)
+            {
+                light.color = checkVector;
+                lightChanged = true;
+            }
+
+            if (light.type == 0) 
+            {
+                float direction[3] = { light.direction.x, light.direction.y ,light.direction.z };
+                ImGui::DragFloat3("Direction", direction, 0.01, -1.0, 1.0);
+                checkVector = vec3(direction[0], direction[1], direction[2]);
+
+                if (checkVector != light.direction)
+                {
+                    light.direction = checkVector;
+                    lightChanged = true;
+                }
+            }
+
+            float position[3] = { light.position.x, light.position.y ,light.position.z };
+            ImGui::DragFloat3("Position", position);
+            checkVector = vec3(position[0], position[1], position[2]);
+
+            if (checkVector != light.position)
+            {
+                light.position = checkVector;
+                lightChanged = true;
+            }
+            ImGui::PopID();
+            if (lightChanged)
+            {
+                UpdateLights(app);
+            }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+        }
+
+        ImGui::TreePop();
+    }
 
     ImGui::End();
 }

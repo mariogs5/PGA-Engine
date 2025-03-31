@@ -10,7 +10,7 @@ layout(location = 3) in vec2 aTangent;
 layout(location = 4) in vec2 aBitangent;
 
 struct Light {
-    unsigned int type;
+    int type;
     vec3 color;
     vec3 direction;
     vec3 position;
@@ -19,7 +19,7 @@ struct Light {
 layout(binding = 0, std140) uniform GlobalParams 
 {
     vec3 uCameraPosition;
-    unsigned int uLightCount;
+    int uLightCount;
     Light uLight[16];
 };
 
@@ -46,7 +46,7 @@ void main()
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
 struct Light {
-    unsigned int type;
+    int type;
     vec3 color;
     vec3 direction;
     vec3 position;
@@ -55,7 +55,7 @@ struct Light {
 layout(binding = 0, std140) uniform GlobalParams 
 {
     vec3 uCameraPosition;
-    unsigned int uLightCount;
+    int uLightCount;
     Light uLight[16];
 };
 

@@ -80,6 +80,7 @@ enum LightType
 
 struct Light
 {
+    std::string name;
     LightType type; 
     vec3 color;        
     vec3 direction;    
