@@ -10,6 +10,7 @@
 #include "BufferManagement.h"
 
 #include <glad/glad.h>
+#include <stdexcept>
 
 typedef glm::vec2  vec2;
 typedef glm::vec3  vec3;
@@ -89,11 +90,79 @@ struct Light
 
 struct FrameBuffer 
 {
-    GLuint FBOHandle;
+    GLuint handle;
     vec2 bufferSize;
     std::vector<GLuint> textures;
     std::vector<std::pair<GLenum,GLuint>> attachments;
     GLuint depthHandle;
+
+    void CreateFBO(const uint64_t aAtachments, const uint64_t displayWidth, const uint64_t displayHeight)
+    {
+        for (size_t i = 0; i < aAtachments; ++i)
+        {
+            GLuint colorAttachment;
+            glGenTextures(1, &colorAttachment);
+            glBindTexture(GL_TEXTURE_2D, colorAttachment);
+            glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, displayWidth, displayHeight, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+            glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+            glBindTexture(GL_TEXTURE_2D, 0);
+
+            attachments.push_back({ GL_COLOR_ATTACHMENT0 + i, colorAttachment });
+        }
+
+        glGenTextures(1, &depthHandle);
+        glBindTexture(GL_TEXTURE_2D, depthHandle);
+        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, displayWidth, displayHeight, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+        glBindTexture(GL_TEXTURE_2D, 0);
+
+        glGenFramebuffers(1, &handle);
+        glBindFramebuffer(GL_FRAMEBUFFER, handle);
+        for (auto it = attachments.begin(); it != attachments.end(); ++it)
+        {
+            glFramebufferTexture2D(GL_FRAMEBUFFER, it->first, GL_TEXTURE_2D, it->second, 0);
+        }
+
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthHandle, 0);
+
+        GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+        if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE)
+        {
+            const char* error = "";
+            switch (framebufferStatus) {
+            case GL_FRAMEBUFFER_UNDEFINED: error = "UNDEFINED"; break;
+            case GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT: error = "INCOMPLETE_ATTACHMENT"; break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT: error = "MISSING_ATTACHMENT"; break;
+            case GL_FRAMEBUFFER_INCOMPLETE_DRAW_BUFFER: error = "INCOMPLETE_DRAW_BUFFER"; break;
+            case GL_FRAMEBUFFER_INCOMPLETE_READ_BUFFER: error = "INCOMPLETE_READ_BUFFER"; break;
+            case GL_FRAMEBUFFER_UNSUPPORTED: error = "UNSUPPORTED"; break;
+            case GL_FRAMEBUFFER_INCOMPLETE_MULTISAMPLE: error = "INCOMPLETE_MULTISAMPLE"; break;
+            case GL_FRAMEBUFFER_INCOMPLETE_LAYER_TARGETS: error = "INCOMPLETE_LAYER_TARGETS"; break;
+            }
+            throw std::runtime_error(std::string("Framebuffer creation error: ") + error);
+        }
+
+        //glDrawBuffers(textures, )
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    }
+
+    void Clean()
+    {
+        glDeleteFramebuffers(1, &handle);
+        for (auto& texture : attachments) 
+        {
+            glDeleteTextures(1, &texture.second);
+            // Faltan cosas
+        }
+    }
 };
 
 const VertexV3U2 vertices[] = {

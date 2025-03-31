@@ -223,6 +223,41 @@ void UpdateLights(App* app)
     UnmapBuffer(app->globalUBO);
 }
 
+void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
+{
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+    glViewport(0, 0, app->displaySize.x, app->displaySize.y);
+
+    Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
+    glUseProgram(programTexturedGeometry.handle);
+
+    glBindVertexArray(app->vao);
+
+    glEnable(GL_BLEND);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+
+    glBindBufferRange(GL_UNIFORM_BUFFER, 0, app->globalUBO.handle, 0, app->globalUBO.size);
+
+    size_t iteration = 0;
+    const char* uniformNames[] = { "uAlbedo", "uNormals", "uPosition", "uViewDir" };
+    for(const auto& texture: aFBO.attachments)
+    {
+        glUniform1i(glad_glGetUniformLocation(programTexturedGeometry.handle, uniformNames[iteration]), iteration);
+        glActiveTexture(GL_TEXTURE0 + iteration);
+        glBindTexture(GL_TEXTURE_2D, texture.second);
+
+        ++iteration;
+    }
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
+
+    glBindVertexArray(0);
+    glUseProgram(0);
+}
+
 void Init(App* app)
 {
     app->glInfo = GetOpenGLInfo(app->glInfo);
@@ -273,21 +308,6 @@ void Init(App* app)
     app->patrickTextureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
     app->patrickIdx = LoadModel(app, "Patrick/Patrick.obj");
 
-    // Plane
-
-    // --- Start Old Camera Code --- //
-    //app->camera.position = glm::vec3(0, 10, 25);
-    //app->camera.target = glm::vec3(0, 0, 0);
-    //app->camera.upVector = glm::vec3(0, 1, 0);
-
-    //float aspectRatio = (float)app->displaySize.x / (float)app->displaySize.y;
-    //float znear = 0.1f;
-    //float zfar = 1000.0f;
-
-    //glm::mat4 projection = glm::perspective(glm::radians(60.0f), aspectRatio, znear, zfar);
-    //glm::mat4 view = glm::lookAt(app->camera.position, app->camera.target, app->camera.upVector);
-    // --- End Old Camera Code --- //
-
     // --- Create Uniforms --- //
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
@@ -296,13 +316,13 @@ void Init(App* app)
     Light sun = { "Sun light", LightType_Directional, vec3(0.2, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
     app->lights.push_back(sun);
 
-    Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0)};
+    Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
     app->lights.push_back(b);
 
-    Light c = { "Point 1", LightType_Point, vec3(0.0, 0.2, 0.0), vec3(100.0, -1.0, 0.0), vec3(0.0)};
+    Light c = { "Point 1", LightType_Point, vec3(0.0, 0.2, 0.0), vec3(0, 0, 0), vec3(-20, 0, 0) };
     app->lights.push_back(c);
 
-    Light d = { "Point  1", LightType_Point, vec3(0.2, 0.0, 0.0), vec3(-100.0, -1.0, 0.0), vec3(0.0)};
+    Light d = { "Point  1", LightType_Point, vec3(0.2, 0.0, 0.0), vec3(0, 0, 0), vec3(20, 0, 0) };
     app->lights.push_back(d);
 
     // --- Global UBO --- //
@@ -348,6 +368,8 @@ void Init(App* app)
     UnmapBuffer(app->entityUBO);
 
     app->mode = Mode_Forward_Geometry;
+
+    app->primaryFBO.CreateFBO(4, app->displaySize.x, app->displaySize.y);
 }
 
 void Gui(App* app)
@@ -557,6 +579,8 @@ void Cleanup(App* app)
         glDeleteBuffers(1, &app->embeddedElements);
         app->embeddedElements = 0;
     }
+
+    app->primaryFBO.Clean();
 }
 
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program)
@@ -638,40 +662,6 @@ void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vao
     }
 
     glBindVertexArray(0);
-}
-
-void CreateFBO(App* app, FrameBuffer& oldBuffer)
-{
-    // Eliminar el FBO antiguo antes de crear otro
-
-    for(size_t i = 0; i < 1; ++i)
-    {
-        // Framebuffer
-        GLuint colorAttachment;
-        glGenTextures(1, &colorAttachment);
-        glBindTexture(GL_TEXTURE_2D, colorAttachment);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA8, app->displaySize.x, app->displaySize.y, 0, GL_RGBA, GL_UNSIGNED_BYTE, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-
-        app->primaryFBO.attachments.push_back({ GL_COLOR_ATTACHMENT0 + i,colorAttachment });
-
-        GLuint depthAttachment;
-        glGenTextures(1, &depthAttachment);
-        glBindTexture(GL_TEXTURE_2D, depthAttachment);
-        glTexImage2D(GL_TEXTURE_2D, 0, GL_DEPTH_COMPONENT24, app->displaySize.x, app->displaySize.y, 0, GL_DEPTH_COMPONENT, GL_FLOAT, NULL);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_R, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-        glBindTexture(GL_TEXTURE_2D, 0);
-        app->primaryFBO.depthHandle = depthAttachment;
-    }
 }
 
 OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo)

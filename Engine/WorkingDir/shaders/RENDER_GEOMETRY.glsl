@@ -67,31 +67,9 @@ in vec3 vViewDir;
 uniform sampler2D uTexture;
 
 layout(location = 0) out vec4 oColor;
-
-
-vec3 CalcPointLight(Light aLight, vec3 aNormal, vec3 aPosition, vec3 aViewDir)
-{
-    vec3 lightDir = normalize(aLight.position - aPosition);
-    float diff = max(dot(aNormal, lightDir), 0.0);
-    vec3 reflectDir = reflect(-lightDir, aNormal);
-    float spec = pow(max(dot(aViewDir, reflectDir), 0.0), 2.0);
-
-    float distance = length(aLight.position - aPosition);
-
-    float constant = 1.0f;
-    float linear = 0.09f;
-    float quadratic = 0.032f;
-    float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
-
-    vec3 ambient = aLight.color * 0.2;
-    vec3 diffuse = aLight.color * diff;
-    vec3 specular = 0.1 * spec * aLight.color;
-
-    ambient *= attenuation;
-    diffuse *= attenuation;
-    specular *= attenuation;
-    return (ambient + diffuse + specular);
-}
+layout(location = 1) out vec4 oNormals;
+layout(location = 2) out vec4 oPosition;
+layout(location = 3) out vec4 oViewDir;
 
 void main()
 {
@@ -113,7 +91,10 @@ void main()
         
     }
 
-    oColor = vec4(returnColor, 1.0);
+    oColor = vec4(uTexture, vTexCoord);
+    oNormals = vec4(vNormal, 0.0);
+    oPosition = vec4(vPosition, 0.0);
+    oViewDir = vec4(vViewDir, 0.0);
 }
 
 #endif

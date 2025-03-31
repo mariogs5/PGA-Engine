@@ -1,6 +1,4 @@
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
-///////////////////////////////////////////////////////////////////////
+
 #ifdef TEXTURED_GEOMETRY
 
 #if defined(VERTEX) ///////////////////////////////////////////////////
@@ -20,20 +18,76 @@ void main()
 
 in vec2 vTexCoord;
 
+uniform sampler2D uAlbedo;
+uniform sampler2D uNormals;
+uniform sampler2D uPosition;
+uniform sampler2D uViewDir;
+
 uniform sampler2D uTexture;
 
 layout(location = 0) out vec4 oColor;
 
+vec3 CalcPointLight(Light alight, vec3 aNormal, vec3 aPosition, vec3 aViewDir)
+{
+    vec3 lightDir = normalize(alight.position - aPosition);
+    float diff = max(dot(aNormal, lightDir), 0.0);
+    vec3 reflectDir = reflect(-lightDir, aNormal);
+    float spec = pow(max(dot(aViewDir, reflectDir), 0.0), 2.0);
+
+    float distance = length(alight.position - aPosition);
+
+    float constant = 1.0f;
+    float linear = 0.09f;
+    float quadratic = 0.032f;
+    float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
+
+    vec3 ambient = alight.color * 0.2;
+    vec3 diffuse = alight.color * diff;
+    vec3 specular = 0.1 * spec * alight.color;
+    ambient *= attenuation;
+    diffuse *= attenuation;
+    specular *= attenuation;
+
+    return (ambient + diffuse + specular);
+}
+
+vec3 CalcDirLight(Light alight, vec3 aNormal, vec3 aViewDir)
+{
+    vec3 lightDir = normalize(-alight.direction);
+    float diff = max(dot(aNormal, lightDir), 0.0);
+    vec3 reflectDir = reflect(-lightDir, aNormal);
+    float spec = pow(max(dot(aViewDir, reflectDir), 0.0), 2.0);
+
+    vec3 ambient = alight.color * 0.2;
+    vec3 diffuse = alight.color * diff;
+    vec3 specular = 0.1 * spec * alight.color;
+
+    return (ambient + diffuse + specular);
+}
+
 void main()
 {
-    oColor = texture(uTexture, vTexCoord);
+    vec3 Albedo = texture(uAlbedo, vTexCoord).rgb;
+    vec3 Normal = texture(uNormals, vTexCoord).xyz;
+    vec3 ViewDir = texture(uViewDir, vTexCoord).xyz;
+    vec3 Position = texture(uPosition, vTexCoord).xyz;
+
+    vec3 returnColor = vec3(0.0);
+    for(int i = 0; i < uLightCount; ++i)
+    {
+        vec3 lightResult = vec3(0.0);
+        if(uLight[i].type == 0)
+        {
+            lightResult = CalcDirLight(uLight[i], Normal, ViewDir);
+        }
+        else if(uLight[i].type == 1)
+        {
+            lightResult = CalcPointLight(uLight[i], Normal, Position, ViewDir);
+        }
+        returnColor += lightResult * Albedo;
+    }
+    oColor = vec4(returnColor, 1.0);
 }
 
 #endif
 #endif
-
-
-// NOTE: You can write several shaders in the same file if you want as
-// long as you embrace them within an #ifdef block (as you can see above).
-// The third parameter of the LoadProgram function in engine.cpp allows
-// chosing the shader you want to load by name.
