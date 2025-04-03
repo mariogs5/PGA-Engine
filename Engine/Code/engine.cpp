@@ -202,6 +202,11 @@ u32 LoadTexture2D(App* app, const char* filepath)
     }
 }
 
+void UpdateGBuffer(App* app)
+{
+    
+}
+
 void UpdateLights(App* app)
 {
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
@@ -235,6 +240,7 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
     glUseProgram(programTexturedGeometry.handle);
 
     glBindVertexArray(app->vao);
+    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -426,6 +432,7 @@ void Gui(App* app)
                 if (ImGui::Selectable(app->GBufferItems[i].c_str(), isSelected)) {
                     app->currentGBufferItem = i;
                     // Handle the GBuffer change here (e.g., update shader uniform)
+
                 }
 
                 // Set the initial focus when opening the combo
@@ -588,7 +595,7 @@ void Render(App* app)
             }
 
             glBindBuffer(GL_FRAMEBUFFER, 0);
-
+            glUseProgram(0);
             RenderScreenFillQuad(app, app->primaryFBO);
         }
         break;
