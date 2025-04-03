@@ -37,8 +37,6 @@ uniform sampler2D uNormals;
 uniform sampler2D uPosition;
 uniform sampler2D uViewDir;
 
-uniform sampler2D uTexture;
-
 layout(location = 0) out vec4 oColor;
 
 vec3 CalcPointLight(Light alight, vec3 aNormal, vec3 aPosition, vec3 aViewDir)
@@ -92,11 +90,11 @@ void main()
         vec3 lightResult = vec3(0.0);
         if(uLight[i].type == 0)
         {
-            lightResult = CalcDirLight(uLight[i], Normal, ViewDir);
+            lightResult += CalcDirLight(uLight[i], Normal, ViewDir);
         }
         else if(uLight[i].type == 1)
         {
-            lightResult = CalcPointLight(uLight[i], Normal, Position, ViewDir);
+            lightResult += CalcPointLight(uLight[i], Normal, Position, ViewDir);
         }
         returnColor += lightResult * Color;
     }

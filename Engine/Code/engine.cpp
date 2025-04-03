@@ -9,6 +9,7 @@
 #include <imgui.h>
 #include <stb_image.h>
 #include <stb_image_write.h>
+#include "OpenGLErrorGuard.h"
 
 void CreateEntity(App* app, const u32 aModelIdx, const glm::mat4& aVP, const glm::mat4& aPos) 
 {
@@ -230,7 +231,7 @@ void UpdateLights(App* app)
 
 void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 {
-    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT);
 
@@ -241,14 +242,16 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 
     glBindVertexArray(app->vao);
 
-    size_t iteration = 0;
+    int iteration = 0;
     const char* uniformNames[] = { "uColor", "uNormals", "uPosition", "uViewDir" };
     for(const auto& texture: aFBO.attachments)
     {
-        GLuint uniformPosition = glad_glGetUniformLocation(programTexturedGeometry.handle, uniformNames[iteration]);
-        glUniform1i(uniformPosition, iteration);
+        GLuint uniformPosition = glGetUniformLocation(programTexturedGeometry.handle, uniformNames[iteration]);
+
         glActiveTexture(GL_TEXTURE0 + iteration);
         glBindTexture(GL_TEXTURE_2D, texture.second);
+        glUniform1i(uniformPosition, iteration);
+
 
         ++iteration;
     }
@@ -297,8 +300,8 @@ void Init(App* app)
 
     // Dice
     app->texturedGeometryProgramIdx = LoadProgram(app, "shaders/RENDER_QUAD.glsl", "TEXTURED_GEOMETRY");
-    Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-    app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
+    //Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
+    //app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
 
     app->diceTexIdx = LoadTexture2D(app, "dice.png");
     app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
@@ -588,9 +591,9 @@ void Render(App* app)
                 }
             }
 
+            glUseProgram(0);
             RenderScreenFillQuad(app, app->primaryFBO);
             glBindBuffer(GL_FRAMEBUFFER, 0);
-            glUseProgram(0);
         }
         break;
 
