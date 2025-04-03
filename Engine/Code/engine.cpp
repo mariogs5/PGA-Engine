@@ -230,9 +230,9 @@ void UpdateLights(App* app)
 
 void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    //glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
@@ -240,12 +240,6 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
     glUseProgram(programTexturedGeometry.handle);
 
     glBindVertexArray(app->vao);
-    glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
-
-    glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
-    glBindBufferRange(GL_UNIFORM_BUFFER, 0, app->globalUBO.handle, 0, app->globalUBO.size);
 
     size_t iteration = 0;
     const char* uniformNames[] = { "uColor", "uNormals", "uPosition", "uViewDir" };
@@ -513,7 +507,7 @@ void Gui(App* app)
 void Update(App* app)
 {
     // You can handle app->input keyboard/mouse here
-    app->camera.Update(app);
+    //app->camera.Update(app);
 }
 
 void Render(App* app)
@@ -522,7 +516,7 @@ void Render(App* app)
     {
         case Mode_TexturedQuad:
         {
-            glClearColor(0.f, 0.f, 0.f, 1.0f);
+            glClearColor(0.f, 0.f, 0.f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glViewport(0, 0, app->displaySize.x, app->displaySize.y);
@@ -594,9 +588,9 @@ void Render(App* app)
                 }
             }
 
+            RenderScreenFillQuad(app, app->primaryFBO);
             glBindBuffer(GL_FRAMEBUFFER, 0);
             glUseProgram(0);
-            RenderScreenFillQuad(app, app->primaryFBO);
         }
         break;
 
