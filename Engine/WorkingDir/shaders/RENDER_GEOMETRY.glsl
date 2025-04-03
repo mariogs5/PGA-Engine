@@ -45,20 +45,6 @@ void main()
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
-struct Light {
-    int type;
-    vec3 color;
-    vec3 direction;
-    vec3 position;
-};
-
-layout(binding = 0, std140) uniform GlobalParams 
-{
-    vec3 uCameraPosition;
-    int uLightCount;
-    Light uLight[16];
-};
-
 in vec2 vTexCoord;
 in vec3 vPosition;
 in vec3 vNormal;
@@ -73,25 +59,7 @@ layout(location = 3) out vec4 oViewDir;
 
 void main()
 {
-    vec3 returnColor = vec3(0.0);
-
-    for (int i = 0; i < uLightCount; ++i) 
-    {  
-        switch(uLight[i].type)
-        {
-            case 0:
-            // Directional Light
-
-            break;
-
-            case 1:
-                returnColor += CalcPointLight(uLight[i], vNormal, vPosition, vViewDir);
-            break;
-        }
-        
-    }
-
-    oColor = vec4(uTexture, vTexCoord);
+    oColor = texture(uTexture, vTexCoord);
     oNormals = vec4(vNormal, 0.0);
     oPosition = vec4(vPosition, 0.0);
     oViewDir = vec4(vViewDir, 0.0);

@@ -16,9 +16,23 @@ void main()
 
 #elif defined(FRAGMENT) ///////////////////////////////////////////////
 
+struct Light {
+    int type;
+    vec3 color;
+    vec3 direction;
+    vec3 position;
+};
+
+layout(binding = 0, std140) uniform GlobalParams 
+{
+    vec3 uCameraPosition;
+    int uLightCount;
+    Light uLight[16];
+};
+
 in vec2 vTexCoord;
 
-uniform sampler2D uAlbedo;
+uniform sampler2D uColor;
 uniform sampler2D uNormals;
 uniform sampler2D uPosition;
 uniform sampler2D uViewDir;
@@ -67,7 +81,7 @@ vec3 CalcDirLight(Light alight, vec3 aNormal, vec3 aViewDir)
 
 void main()
 {
-    vec3 Color = texture(uColor, vTexCoord);
+    vec3 Color = texture(uColor, vTexCoord).rgb;
     vec3 Normal = texture(uNormals, vTexCoord).xyz;
     vec3 ViewDir = texture(uViewDir, vTexCoord).xyz;
     vec3 Position = texture(uPosition, vTexCoord).xyz;
@@ -84,7 +98,7 @@ void main()
         {
             lightResult = CalcPointLight(uLight[i], Normal, Position, ViewDir);
         }
-        returnColor.rgb += lightResult * Color;
+        returnColor += lightResult * Color;
     }
 
     oColor = vec4(returnColor, 1.0);

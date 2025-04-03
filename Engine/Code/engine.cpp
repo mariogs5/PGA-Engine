@@ -226,7 +226,7 @@ void UpdateLights(App* app)
 void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
-    glClearColor(0.f, 0.f, 0.f, 1.0f);
+    glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
@@ -242,10 +242,11 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
     glBindBufferRange(GL_UNIFORM_BUFFER, 0, app->globalUBO.handle, 0, app->globalUBO.size);
 
     size_t iteration = 0;
-    const char* uniformNames[] = { "uAlbedo", "uNormals", "uPosition", "uViewDir" };
+    const char* uniformNames[] = { "uColor", "uNormals", "uPosition", "uViewDir" };
     for(const auto& texture: aFBO.attachments)
     {
-        glUniform1i(glad_glGetUniformLocation(programTexturedGeometry.handle, uniformNames[iteration]), iteration);
+        GLuint uniformPosition = glad_glGetUniformLocation(programTexturedGeometry.handle, uniformNames[iteration]);
+        glUniform1i(uniformPosition, iteration);
         glActiveTexture(GL_TEXTURE0 + iteration);
         glBindTexture(GL_TEXTURE_2D, texture.second);
 
@@ -261,6 +262,9 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 void Init(App* app)
 {
     app->glInfo = GetOpenGLInfo(app->glInfo);
+
+    app->GBufferItems = { "Final Render", "Albedo", "Normals", "Position", "View Direction" };
+    app->currentGBufferItem = 0;
 
     glEnable(GL_DEPTH_TEST);
 
@@ -410,6 +414,34 @@ void Gui(App* app)
     ImGui::Separator();
     ImGui::Spacing();
 
+    if (ImGui::TreeNode("Render"))
+    {
+        ImGui::Spacing();
+        ImGui::Text("GBuffer Modes:");
+        ImGui::Spacing();
+
+        if (ImGui::BeginCombo(" ", app->GBufferItems[app->currentGBufferItem].c_str())) {
+            for (int i = 0; i < app->GBufferItems.size(); i++) {
+                const bool isSelected = (app->currentGBufferItem == i);
+                if (ImGui::Selectable(app->GBufferItems[i].c_str(), isSelected)) {
+                    app->currentGBufferItem = i;
+                    // Handle the GBuffer change here (e.g., update shader uniform)
+                }
+
+                // Set the initial focus when opening the combo
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::TreePop();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
     if (ImGui::TreeNode("Lights"))
     {
         ImGui::Spacing();
@@ -508,7 +540,19 @@ void Render(App* app)
         break;
         case Mode_Forward_Geometry:
         {
-            glClearColor(0.f, 0.f, 0.f, 1.0f);
+            glClearColor(0.f, 0.f, 0.f, 0.0f);
+            glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+
+            glBindBuffer(GL_FRAMEBUFFER, app->primaryFBO.handle);
+
+            std::vector<GLuint>textures;
+            for(auto& it:app->primaryFBO.attachments)
+            {
+                textures.push_back(it.second);
+            }
+            glDrawBuffers(textures.size(), textures.data());
+
+            glClearColor(0.f, 0.f, 0.f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
             glViewport(0, 0, app->displaySize.x, app->displaySize.y);
@@ -542,6 +586,10 @@ void Render(App* app)
                     glBindTexture(GL_TEXTURE_2D, 0);
                 }
             }
+
+            glBindBuffer(GL_FRAMEBUFFER, 0);
+
+            RenderScreenFillQuad(app, app->primaryFBO);
         }
         break;
 

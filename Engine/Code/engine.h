@@ -91,13 +91,17 @@ struct Light
 struct FrameBuffer 
 {
     GLuint handle;
-    vec2 bufferSize;
-    std::vector<GLuint> textures;
     std::vector<std::pair<GLenum,GLuint>> attachments;
     GLuint depthHandle;
 
-    void CreateFBO(const uint64_t aAtachments, const uint64_t displayWidth, const uint64_t displayHeight)
+    bool CreateFBO(const uint64_t aAtachments, const uint64_t displayWidth, const uint64_t displayHeight)
     {
+        if (aAtachments > GL_MAX_COLOR_ATTACHMENTS) 
+        {
+            return false;
+        }
+
+        std::vector<GLenum> enums;
         for (size_t i = 0; i < aAtachments; ++i)
         {
             GLuint colorAttachment;
@@ -112,6 +116,7 @@ struct FrameBuffer
             glBindTexture(GL_TEXTURE_2D, 0);
 
             attachments.push_back({ GL_COLOR_ATTACHMENT0 + i, colorAttachment });
+            enums.push_back(GL_COLOR_ATTACHMENT0 + i);
         }
 
         glGenTextures(1, &depthHandle);
@@ -150,7 +155,7 @@ struct FrameBuffer
             throw std::runtime_error(std::string("Framebuffer creation error: ") + error);
         }
 
-        glDrawBuffers(textures.size(), textures.data());
+        glDrawBuffers(enums.size(), enums.data());
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -258,6 +263,9 @@ struct App
     std::vector<Light> lights;
 
     FrameBuffer primaryFBO;
+
+    std::vector<std::string> GBufferItems;
+    int currentGBufferItem;
 };
 
 void UpdateLights(App* app);
