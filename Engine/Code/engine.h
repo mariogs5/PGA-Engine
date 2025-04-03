@@ -150,7 +150,7 @@ struct FrameBuffer
             throw std::runtime_error(std::string("Framebuffer creation error: ") + error);
         }
 
-        //glDrawBuffers(textures, )
+        glDrawBuffers(textures.size(), textures.data());
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
     }
 
@@ -160,8 +160,10 @@ struct FrameBuffer
         for (auto& texture : attachments) 
         {
             glDeleteTextures(1, &texture.second);
-            // Faltan cosas
+            texture.second = 0;
         }
+        glDeleteTextures(1, &depthHandle);
+        depthHandle = 0;
     }
 };
 

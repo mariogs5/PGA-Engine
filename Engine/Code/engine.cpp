@@ -474,6 +474,7 @@ void Gui(App* app)
 void Update(App* app)
 {
     // You can handle app->input keyboard/mouse here
+    app->camera.Update(app);
 }
 
 void Render(App* app)

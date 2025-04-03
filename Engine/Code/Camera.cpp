@@ -1,4 +1,5 @@
 #include"Camera.h"
+#include "engine.h"
 
 Camera::Camera()
     : m_position(glm::vec3(0, 10, 25)),
@@ -9,6 +10,11 @@ Camera::Camera()
     m_nearPlane(0.1f),
     m_farPlane(100.0f)
 {}
+
+void Camera::Update(App * app)
+{
+    // Hacer el movimiento de la camara aqui
+}
 
 glm::mat4 Camera::GetProjectionMatrix() const 
 {

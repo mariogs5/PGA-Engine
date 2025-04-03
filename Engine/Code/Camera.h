@@ -5,6 +5,7 @@
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
 
+struct App;
 
 struct CameraSettings
 {
@@ -30,6 +31,9 @@ private:
 
 public:
 	Camera();
+
+	void Update(App* app);
+
 	//-------- Matrix --------//
 	glm::mat4 GetProjectionMatrix() const;
 	glm::mat4 GetViewMatrix() const;
