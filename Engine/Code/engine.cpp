@@ -319,16 +319,19 @@ void Init(App* app)
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
     // --- Lights --- //
-    Light sun = { "Sun light", LightType_Directional, vec3(0.2, 0.0, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
-    app->lights.push_back(sun);
+    //Light sun = { "Sun light", LightType_Directional, vec3(0.1, 0.1, 0.1), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    //app->lights.push_back(sun);
 
-    Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
-    app->lights.push_back(b);
+    //Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    //app->lights.push_back(b);
 
-    Light c = { "Point 1", LightType_Point, vec3(0.0, 0.2, 0.0), vec3(0, 0, 0), vec3(-20, 0, 0) };
-    app->lights.push_back(c);
+    //Light c = { "Point 1", LightType_Point, vec3(0.0, 0.2, 0.0), vec3(0, 0, 0), vec3(-20, 0, 0) };
+    //app->lights.push_back(c);
 
-    Light d = { "Point  1", LightType_Point, vec3(0.2, 0.0, 0.0), vec3(0, 0, 0), vec3(20, 0, 0) };
+    //Light d = { "Point  1", LightType_Point, vec3(0.2, 0.0, 0.0), vec3(0, 0, 0), vec3(20, 0, 0) };
+    //app->lights.push_back(d);
+     
+    Light d = { "Point 1", LightType_Point, vec3(0.1, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0) };
     app->lights.push_back(d);
 
     // --- Global UBO --- //
