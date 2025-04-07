@@ -133,10 +133,10 @@ struct FrameBuffer
         glBindFramebuffer(GL_FRAMEBUFFER, handle);
         for (auto it = attachments.begin(); it != attachments.end(); ++it)
         {
-            glFramebufferTexture2D(GL_FRAMEBUFFER, it->first, GL_TEXTURE_2D, it->second, 0);
+            glFramebufferTexture(GL_FRAMEBUFFER, it->first, it->second, 0);
         }
 
-        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthHandle, 0);
+        glFramebufferTexture(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, depthHandle, 0);
 
         GLenum framebufferStatus = glCheckFramebufferStatus(GL_FRAMEBUFFER);
         if (framebufferStatus != GL_FRAMEBUFFER_COMPLETE)

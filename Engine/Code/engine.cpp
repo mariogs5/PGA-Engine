@@ -233,7 +233,7 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 {
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.f, 0.f, 0.f, 0.f);
-    glClear(GL_COLOR_BUFFER_BIT);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
     glViewport(0, 0, app->displaySize.x, app->displaySize.y);
 
@@ -251,7 +251,6 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
         glActiveTexture(GL_TEXTURE0 + iteration);
         glBindTexture(GL_TEXTURE_2D, texture.second);
         glUniform1i(uniformPosition, iteration);
-
 
         ++iteration;
     }
@@ -547,7 +546,7 @@ void Render(App* app)
             glClearColor(0.f, 0.f, 0.f, 0.0f);
             glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
-            glBindBuffer(GL_FRAMEBUFFER, app->primaryFBO.handle);
+            glBindFramebuffer(GL_FRAMEBUFFER, app->primaryFBO.handle);
 
             std::vector<GLuint>textures;
             for(auto& it:app->primaryFBO.attachments)
