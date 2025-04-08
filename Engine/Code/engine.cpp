@@ -205,7 +205,16 @@ u32 LoadTexture2D(App* app, const char* filepath)
 
 void UpdateGBuffer(App* app)
 {
-    
+    Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
+    glUseProgram(programTexturedGeometry.handle);
+
+    // Get the uniform location once per frame (or cache it during initialization)
+    GLint gBufferProgramLoc = glGetUniformLocation(programTexturedGeometry.handle, "uGBuffer");
+
+    // Update the uniform value from your app state
+    glUniform1i(gBufferProgramLoc, app->currentGBufferItem);
+
+    glUseProgram(0);
 }
 
 void UpdateLights(App* app)
@@ -431,7 +440,7 @@ void Gui(App* app)
                 if (ImGui::Selectable(app->GBufferItems[i].c_str(), isSelected)) {
                     app->currentGBufferItem = i;
                     // Handle the GBuffer change here (e.g., update shader uniform)
-
+                    UpdateGBuffer(app);
                 }
 
                 // Set the initial focus when opening the combo

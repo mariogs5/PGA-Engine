@@ -36,6 +36,7 @@ uniform sampler2D uColor;
 uniform sampler2D uNormals;
 uniform sampler2D uPosition;
 uniform sampler2D uViewDir;
+uniform int uGBuffer;
 
 layout(location = 0) out vec4 oColor;
 
@@ -84,22 +85,33 @@ void main()
     vec3 ViewDir = texture(uViewDir, vTexCoord).xyz;
     vec3 Position = texture(uPosition, vTexCoord).xyz;
 
-    vec3 returnColor = vec3(0.0);
-    for(int i = 0; i < uLightCount; ++i)
-    {
-        vec3 lightResult = vec3(0.0);
-        if(uLight[i].type == 0)
-        {
-            lightResult += CalcDirLight(uLight[i], Normal, ViewDir);
-        }
-        else if(uLight[i].type == 1)
-        {
-            lightResult += CalcPointLight(uLight[i], Normal, Position, ViewDir);
-        }
-        returnColor += lightResult * Color;
-    }
+    switch(uGBuffer) {
+        case 0: // Final render
+        
+            vec3 returnColor = vec3(0.0);
+            for(int i = 0; i < uLightCount; ++i)
+            {
+                vec3 lightResult = vec3(0.0);
+                if(uLight[i].type == 0)
+                {
+                    lightResult += CalcDirLight(uLight[i], Normal, ViewDir);
+                }
+                else if(uLight[i].type == 1)
+                {
+                    lightResult += CalcPointLight(uLight[i], Normal, Position, ViewDir);
+                }
+                returnColor += lightResult * Color;
+            }
 
-    oColor = vec4(returnColor, 1.0);
+            oColor = vec4(returnColor, 1.0);
+
+            break;
+        case 1: oColor = vec4(Color, 1.0); break;
+        case 2: oColor = vec4(Normal * 0.5 + 0.5, 1.0); break;
+        case 3: oColor = vec4(Position * 0.1, 1.0); break;
+        case 4: oColor = vec4(ViewDir * 0.5 + 0.5, 1.0); break;
+        default: oColor = vec4(1,0,1,1); // Error color
+    }
 }
 
 #endif
