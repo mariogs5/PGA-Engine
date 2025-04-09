@@ -56,6 +56,7 @@ layout(location = 0) out vec4 oColor;
 layout(location = 1) out vec4 oNormals;
 layout(location = 2) out vec4 oPosition;
 layout(location = 3) out vec4 oViewDir;
+layout(location = 4) out vec4 oDepth;
 
 void main()
 {
@@ -63,6 +64,7 @@ void main()
     oNormals = vec4(vNormal, 0.0);
     oPosition = vec4(vPosition, 0.0);
     oViewDir = vec4(vViewDir, 0.0);
+    oDepth = vec4(vec3(gl_FragCoord.z), 0.0);
 }
 
 #endif

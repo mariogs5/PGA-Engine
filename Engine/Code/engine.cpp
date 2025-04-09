@@ -300,7 +300,7 @@ void Init(App* app)
 {
     app->glInfo = GetOpenGLInfo(app->glInfo);
 
-    app->GBufferItems = { "Final Render", "Albedo", "Normals", "Position", "View Direction" };
+    app->GBufferItems = { "Final Render", "Albedo", "Normals", "Depth", "Position", "View Direction" };
     app->currentGBufferItem = 0;
 
     glEnable(GL_DEPTH_TEST);

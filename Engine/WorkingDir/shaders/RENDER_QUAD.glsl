@@ -34,6 +34,7 @@ in vec2 vTexCoord;
 
 uniform sampler2D uColor;
 uniform sampler2D uNormals;
+uniform sampler2D uDepth;
 uniform sampler2D uPosition;
 uniform sampler2D uViewDir;
 uniform int uGBuffer;
@@ -82,6 +83,7 @@ void main()
 {
     vec3 Color = texture(uColor, vTexCoord).rgb;
     vec3 Normal = texture(uNormals, vTexCoord).xyz;
+    vec3 Depth = texture(uDepth, vTexCoord).xyz;
     vec3 ViewDir = texture(uViewDir, vTexCoord).xyz;
     vec3 Position = texture(uPosition, vTexCoord).xyz;
 
@@ -108,8 +110,9 @@ void main()
             break;
         case 1: oColor = vec4(Color, 1.0); break;
         case 2: oColor = vec4(Normal * 0.5 + 0.5, 1.0); break;
-        case 3: oColor = vec4(Position * 0.1, 1.0); break;
-        case 4: oColor = vec4(ViewDir * 0.5 + 0.5, 1.0); break;
+        case 3: oColor = vec4(Depth, 1.0); break;
+        case 4: oColor = vec4(Position * 0.1, 1.0); break;
+        case 5: oColor = vec4(ViewDir * 0.5 + 0.5, 1.0); break;
         default: oColor = vec4(1,0,1,1); // Error color
     }
 }

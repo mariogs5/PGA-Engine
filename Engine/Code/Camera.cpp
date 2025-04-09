@@ -44,14 +44,12 @@ void Camera::Update(App * app)
     if (app->input.mouseButtons[MIDDLE] == BUTTON_IDLE && app->input.keys[K_LEFT_ALT] == BUTTON_IDLE && app->input.mouseButtons[RIGHT] == BUTTON_PRESSED) // Right mouse held
     {
         FPSMovement(app, newPos, speed);
-    }
 
-    if (newPos != glm::vec3(0)) 
-    {
-        MoveCamera(newPos);
         c_componentsChanged = true;
     }
 
+
+    MoveCamera(newPos);
 
     //-------- Center Camera --------//
     if (app->input.keys[K_F] == BUTTON_PRESSED)
@@ -67,7 +65,7 @@ void Camera::Update(App * app)
 
     if (c_componentsChanged)
     {
-        //app->UpdateCameraUniforms(app);
+        app->UpdateCameraUniforms(app);
         c_componentsChanged = false;
     }
 }
