@@ -8,12 +8,133 @@ Camera::Camera()
     m_verticalFov(glm::radians(60.0f)),
     m_aspectRatio(16.0f / 9.0f),
     m_nearPlane(0.1f),
-    m_farPlane(100.0f)
+    m_farPlane(100.0f),
+    c_componentsChanged(false)
+
 {}
 
 void Camera::Update(App * app)
 {
-    // Hacer el movimiento de la camara aqui
+    glm::vec3 newPos(0, 0, 0);
+    float speed = 10.0f * app->deltaTime;
+    
+    if (app->input.keys[K_LEFT_SHIFT] == BUTTON_PRESSED) speed = 20.0f * app->deltaTime;
+
+    //-------- Camera Rotation --------//
+    if (app->input.mouseButtons[LEFT] == BUTTON_PRESSED && app->input.mouseButtons[RIGHT] == BUTTON_PRESSED) // Both mouse buttons held
+    {
+        CameraRotation(app, app->deltaTime);
+        c_componentsChanged = true;
+    }
+
+    if (app->input.keys[K_LEFT_ALT] == BUTTON_PRESSED && app->input.mouseButtons[LEFT] == BUTTON_PRESSED) // Alt + left mouse
+    {
+        CameraRotation(app, app->deltaTime);
+        c_componentsChanged = true;
+    }
+
+    //-------- Camera Zoom --------//
+    if (app->input.mouseScrollY != 0)
+    {
+        CameraZoom(app, newPos, speed);
+        c_componentsChanged = true;
+    }
+
+    //-------- FPS Movement --------//
+    if (app->input.mouseButtons[MIDDLE] == BUTTON_IDLE && app->input.keys[K_LEFT_ALT] == BUTTON_IDLE && app->input.mouseButtons[RIGHT] == BUTTON_PRESSED) // Right mouse held
+    {
+        FPSMovement(app, newPos, speed);
+    }
+
+    if (newPos != glm::vec3(0)) 
+    {
+        MoveCamera(newPos);
+        c_componentsChanged = true;
+    }
+
+
+    //-------- Center Camera --------//
+    if (app->input.keys[K_F] == BUTTON_PRESSED)
+    {
+        glm::vec3 center = glm::vec3(0.0f, 0.0f, 0.0f);
+
+        LookAt(center);
+
+        SetPosition(glm::vec3 (0.0f, 10.0f, 5.0f));
+
+        c_componentsChanged = true;
+    }
+
+    if (c_componentsChanged)
+    {
+        //app->UpdateCameraUniforms(app);
+        c_componentsChanged = false;
+    }
+}
+
+void Camera::FPSMovement(App* app, glm::vec3& newPos, float speed)
+{
+    if (app->input.keys[K_Q] == BUTTON_PRESSED) newPos += GetYvector() * speed;
+    if (app->input.keys[K_E] == BUTTON_PRESSED) newPos -= GetYvector() * speed;
+
+    if (app->input.keys[K_W] == BUTTON_PRESSED) newPos += GetZvector() * speed;
+    if (app->input.keys[K_S] == BUTTON_PRESSED) newPos -= GetZvector() * speed;
+
+    if (app->input.keys[K_A] == BUTTON_PRESSED) newPos -= GetXvector() * speed;
+    if (app->input.keys[K_D] == BUTTON_PRESSED) newPos += GetXvector() * speed;
+}
+
+void Camera::CameraRotation(App* app, float dt)
+{
+    float dx = -app->input.mouseDelta.x;
+    float dy = -app->input.mouseDelta.y;
+
+    float Sensitivity = 0.35f * dt;
+
+    // Get current camera vectors
+    glm::vec3 Y = GetYvector(); // Up
+    glm::vec3 Z = GetZvector(); // Forward
+    glm::vec3 X = GetXvector(); // Right
+
+    // Horizontal rotation (around world Y-axis)
+    if (dx != 0.0f) {
+        float deltaX = dx * Sensitivity;
+        glm::quat yRot = glm::angleAxis(deltaX, glm::vec3(0.0f, 1.0f, 0.0f));
+
+        // Apply rotation to camera vectors
+        Y = yRot * Y;
+        Z = yRot * Z;
+    }
+
+    // Vertical rotation (around camera's local X-axis)
+    if (dy != 0.0f) {
+        float deltaY = dy * Sensitivity;
+        glm::quat xRot = glm::angleAxis(deltaY, X);
+
+        // Apply rotation to camera vectors
+        Y = xRot * Y;
+        Z = xRot * Z;
+
+        // Prevent camera flipping (up/down)
+        if (glm::dot(Y, glm::vec3(0.0f, 1.0f, 0.0f)) < 0.0f) {
+            // Clamp to horizon
+            Z = glm::vec3(0.0f, Z.y > 0.0f ? 1.0f : -1.0f, 0.0f);
+            Y = glm::cross(Z, X);
+        }
+    }
+
+    // Update camera vectors
+    SetYvector(Y);
+    SetZvector(Z);
+}
+
+void Camera::CameraZoom(App* app, glm::vec3& newPos, float speed)
+{
+    if (app->input.mouseScrollY > 0) newPos += GetZvector() * speed;
+    if (app->input.mouseScrollY < 0) newPos -= GetZvector() * speed;
+
+    // Reset scroll after use to prevent continuous zooming
+    app->input.mouseScrollY = 0;
 }
 
 glm::mat4 Camera::GetProjectionMatrix() const 

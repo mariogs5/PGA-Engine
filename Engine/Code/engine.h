@@ -266,9 +266,11 @@ struct App
 
     std::vector<std::string> GBufferItems;
     int currentGBufferItem;
-};
 
-void UpdateLights(App* app);
+    void UpdateLights(App* app);
+
+    void UpdateCameraUniforms(App* app);
+};
 
 void Init(App* app);
 
@@ -283,8 +285,6 @@ void Cleanup(App* app);
 GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 
 void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vaoHandle);
-
-void CreateFBO(App* app);
 
 OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo);
 

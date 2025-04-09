@@ -217,7 +217,7 @@ void UpdateGBuffer(App* app)
     glUseProgram(0);
 }
 
-void UpdateLights(App* app)
+void App::UpdateLights(App* app)
 {
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
     MapBuffer(app->globalUBO, GL_WRITE_ONLY);
@@ -236,6 +236,32 @@ void UpdateLights(App* app)
     }
 
     UnmapBuffer(app->globalUBO);
+}
+
+void App::UpdateCameraUniforms(App* app)
+{
+    UpdateLights(app);
+
+    MapBuffer(app->entityUBO, GL_WRITE_ONLY);
+    glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
+    for (int z = -2; z != 2; ++z)
+    {
+        for (int x = -2; x != 2; ++x)
+        {
+            AlignHead(app->entityUBO, app->uniformBlockAlignment);
+            Entity entity;
+            entity.entityBufferOffset = app->entityUBO.head;
+            entity.worldMatrix = glm::translate(glm::vec3(x * 5, 0, z * 5));
+            entity.modelIndex = app->patrickIdx;
+
+            PushMat4(app->entityUBO, entity.worldMatrix);
+            PushMat4(app->entityUBO, VP * entity.worldMatrix);
+            entity.entityBufferSize = app->entityUBO.head - entity.entityBufferOffset;
+
+            app->entities.push_back(entity);
+        }
+    }
+    UnmapBuffer(app->entityUBO);
 }
 
 void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
@@ -504,7 +530,7 @@ void Gui(App* app)
             ImGui::PopID();
             if (lightChanged)
             {
-                UpdateLights(app);
+                app->UpdateLights(app);
             }
 
             ImGui::Spacing();
@@ -520,8 +546,7 @@ void Gui(App* app)
 
 void Update(App* app)
 {
-    // You can handle app->input keyboard/mouse here
-    //app->camera.Update(app);
+    app->camera.Update(app);
 }
 
 void Render(App* app)

@@ -1,6 +1,8 @@
 #ifndef CAMERA_H
 #define CAMERA_H
 
+#include "platform.h"
+
 #include <glm/glm.hpp>
 #include <glm/gtx/transform.hpp>
 #include <glm/gtc/type_ptr.hpp>
@@ -29,10 +31,17 @@ private:
 	float m_nearPlane;
 	float m_farPlane;
 
+	bool c_componentsChanged;
+
 public:
 	Camera();
 
 	void Update(App* app);
+
+	//-------- Movement --------//
+	void FPSMovement(App* app, glm::vec3& newPos, float speed);
+	void CameraRotation(App* app, float dt);
+	void CameraZoom(App* app, glm::vec3& newPos, float speed);
 
 	//-------- Matrix --------//
 	glm::mat4 GetProjectionMatrix() const;
