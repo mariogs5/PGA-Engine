@@ -233,32 +233,24 @@ void App::UpdateLights(App* app)
         PushVec3(app->globalUBO, light.direction);
         PushVec3(app->globalUBO, light.position);
     }
-
     UnmapBuffer(app->globalUBO);
 }
 
 void App::UpdateCameraUniforms(App* app)
 {
-    UpdateLights(app);
+    //UpdateLights(app);
 
     MapBuffer(app->entityUBO, GL_WRITE_ONLY);
     glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
-    for (int z = -2; z != 2; ++z)
+
+    for (int i = 0; i < app->entities.size(); ++i) 
     {
-        for (int x = -2; x != 2; ++x)
-        {
-            AlignHead(app->entityUBO, app->uniformBlockAlignment);
-            Entity entity;
-            entity.entityBufferOffset = app->entityUBO.head;
-            entity.worldMatrix = glm::translate(glm::vec3(x * 5, 0, z * 5));
-            entity.modelIndex = app->patrickIdx;
+        Entity& entity = app->entities[i];
 
-            PushMat4(app->entityUBO, entity.worldMatrix);
-            PushMat4(app->entityUBO, VP * entity.worldMatrix);
-            entity.entityBufferSize = app->entityUBO.head - entity.entityBufferOffset;
+        glm::mat4 mvp = VP * entity.worldMatrix;
 
-            app->entities.push_back(entity);
-        }
+        u32 mvpOffset = entity.entityBufferOffset + sizeof(glm::mat4);
+        WriteData(app->entityUBO, mvpOffset, mvp);
     }
     UnmapBuffer(app->entityUBO);
 }
