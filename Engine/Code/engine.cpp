@@ -219,7 +219,6 @@ void UpdateGBuffer(App* app)
 
 void App::UpdateLights(App* app)
 {
-    app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
     MapBuffer(app->globalUBO, GL_WRITE_ONLY);
     PushVec3(app->globalUBO, app->camera.GetPosition());
 
@@ -289,6 +288,11 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 
         ++iteration;
     }
+    GLuint uniformPosition = glGetUniformLocation(programTexturedGeometry.handle, "uDepth");
+    glActiveTexture(GL_TEXTURE0 + iteration);
+    glBindTexture(GL_TEXTURE_2D, aFBO.depthHandle);
+    glUniform1i(uniformPosition, iteration);
+
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_SHORT, 0);
 

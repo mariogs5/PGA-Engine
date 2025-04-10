@@ -2,7 +2,7 @@
 #include "engine.h"
 
 Camera::Camera()
-    : m_position(glm::vec3(0, 10, 25)),
+    : m_position(glm::vec3(0, 1, 2)),
     m_zVector(glm::vec3(0, 0, 0)),
     m_yVector(glm::vec3(0.0f, 1.0f, 0.0f)),
     m_verticalFov(glm::radians(60.0f)),
