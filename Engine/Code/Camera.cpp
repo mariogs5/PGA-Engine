@@ -48,9 +48,6 @@ void Camera::Update(App * app)
         c_componentsChanged = true;
     }
 
-
-    MoveCamera(newPos);
-
     //-------- Center Camera --------//
     if (app->input.keys[K_F] == BUTTON_PRESSED)
     {
@@ -58,10 +55,12 @@ void Camera::Update(App * app)
 
         LookAt(center);
 
-        SetPosition(glm::vec3 (0.0f, 10.0f, 5.0f));
+        SetPosition(glm::vec3 (0.0f, 1.0f, 5.0f));
 
         c_componentsChanged = true;
     }
+
+    MoveCamera(newPos);
 
     if (c_componentsChanged)
     {

@@ -238,7 +238,7 @@ void App::UpdateLights(App* app)
 
 void App::UpdateCameraUniforms(App* app)
 {
-    //UpdateLights(app);
+    UpdateLights(app);
 
     MapBuffer(app->entityUBO, GL_WRITE_ONLY);
     glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
@@ -255,8 +255,27 @@ void App::UpdateCameraUniforms(App* app)
     UnmapBuffer(app->entityUBO);
 }
 
+void App::OnResizeWindow(int width, int height)
+{
+    displaySize = vec2 (width, height);
+    primaryFBO.Clean();
+    primaryFBO.CreateFBO(4, displaySize.x, displaySize.y);
+}
+
 void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 {
+    //if (aFBO.handle == 0) {
+    //    ELOG("Error: Invalid FBO handle (0)");
+    //    return;
+    //}
+
+    //for (const auto& texture : aFBO.attachments) {
+    //    if (texture.second == 0 || !glIsTexture(texture.second)) {
+    //        ELOG("Error: Invalid color attachment texture handle");
+    //        return;
+    //    }
+    //}
+
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
     glClearColor(0.f, 0.f, 0.f, 0.f);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -270,6 +289,7 @@ void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
 
     int iteration = 0;
     const char* uniformNames[] = { "uColor", "uNormals", "uPosition", "uViewDir" };
+
     for(const auto& texture: aFBO.attachments)
     {
         GLuint uniformPosition = glGetUniformLocation(programTexturedGeometry.handle, uniformNames[iteration]);

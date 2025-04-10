@@ -11,6 +11,7 @@
 
 #include <glad/glad.h>
 #include <stdexcept>
+#include <assert.h>
 
 typedef glm::vec2  vec2;
 typedef glm::vec3  vec3;
@@ -270,6 +271,7 @@ struct App
     void UpdateLights(App* app);
 
     void UpdateCameraUniforms(App* app);
+    void OnResizeWindow(int width, int height);
 };
 
 void Init(App* app);
