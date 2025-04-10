@@ -258,6 +258,8 @@ void App::UpdateCameraUniforms(App* app)
 void App::OnResizeWindow(int width, int height)
 {
     displaySize = vec2 (width, height);
+    //Hacer esto para arreglar aspect ratio
+    //camera.SetAspectRatio(static_cast<float>(displaySize.x) / static_cast<float>(displaySize.y));
     primaryFBO.Clean();
     primaryFBO.CreateFBO(4, displaySize.x, displaySize.y);
 }

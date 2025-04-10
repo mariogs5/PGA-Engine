@@ -168,6 +168,7 @@ struct FrameBuffer
             glDeleteTextures(1, &texture.second);
             texture.second = 0;
         }
+        attachments.clear();
         glDeleteTextures(1, &depthHandle);
         depthHandle = 0;
     }
