@@ -238,7 +238,7 @@ void App::UpdateLights(App* app)
 
 void App::UpdateCameraUniforms(App* app)
 {
-    UpdateLights(app);
+    //UpdateLights(app);
 
     MapBuffer(app->entityUBO, GL_WRITE_ONLY);
     glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
@@ -349,11 +349,7 @@ void Init(App* app)
     glBindVertexArray(0);
 
     // --------- Programs --------- //
-
-    // Dice
     app->texturedGeometryProgramIdx = LoadProgram(app, "shaders/RENDER_QUAD.glsl", "TEXTURED_GEOMETRY");
-    //Program& texturedGeometryProgram = app->programs[app->texturedGeometryProgramIdx];
-    //app->programUniformTexture = glGetUniformLocation(texturedGeometryProgram.handle, "uTexture");
 
     app->diceTexIdx = LoadTexture2D(app, "dice.png");
     app->whiteTexIdx = LoadTexture2D(app, "color_white.png");

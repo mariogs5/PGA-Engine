@@ -31,6 +31,11 @@ private:
 	float m_nearPlane;
 	float m_farPlane;
 
+	glm::mat4 m_projectionMat;
+	glm::mat4 m_viewMat;
+
+	bool projectionMatChanged;
+	bool viewMatChanged;
 	bool c_componentsChanged;
 
 public:
@@ -45,7 +50,11 @@ public:
 
 	//-------- Matrix --------//
 	glm::mat4 GetProjectionMatrix() const;
+	void SetProjectionMatrix();
+
 	glm::mat4 GetViewMatrix() const;
+	void SetViewMatrix();
+
 
 	//-------- Vertical FOV --------//
 	void SetVerticalFov(float vertical_fov);

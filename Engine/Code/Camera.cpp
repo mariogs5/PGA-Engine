@@ -9,6 +9,10 @@ Camera::Camera()
     m_aspectRatio(16.0f / 9.0f),
     m_nearPlane(0.1f),
     m_farPlane(100.0f),
+    m_projectionMat(glm::perspective(m_verticalFov, m_aspectRatio, m_nearPlane, m_farPlane)),
+    m_viewMat(glm::lookAt(m_position, m_zVector, m_yVector)),
+    projectionMatChanged(false),
+    viewMatChanged(false),
     c_componentsChanged(false)
 
 {}
@@ -62,8 +66,19 @@ void Camera::Update(App * app)
 
     MoveCamera(newPos);
 
+    if (projectionMatChanged) 
+    {
+        SetProjectionMatrix();
+    }
+
+    if (viewMatChanged) 
+    {
+        SetViewMatrix();
+    }
+
     if (c_componentsChanged)
     {
+        //SetViewMatrix();
         app->UpdateCameraUniforms(app);
         c_componentsChanged = false;
     }
@@ -134,14 +149,26 @@ void Camera::CameraZoom(App* app, glm::vec3& newPos, float speed)
     app->input.mouseScrollY = 0;
 }
 
-glm::mat4 Camera::GetProjectionMatrix() const 
+glm::mat4 Camera::GetProjectionMatrix() const
 {
-    return glm::perspective(m_verticalFov, m_aspectRatio, m_nearPlane, m_farPlane);
+    return m_projectionMat;
+    //return glm::perspective(m_verticalFov, m_aspectRatio, m_nearPlane, m_farPlane);
+}
+
+void Camera::SetProjectionMatrix()
+{
+    m_projectionMat = glm::perspective(m_verticalFov, m_aspectRatio, m_nearPlane, m_farPlane);
 }
 
 glm::mat4 Camera::GetViewMatrix() const 
 {
-    return glm::lookAt(m_position, m_zVector, m_yVector);
+    return m_viewMat;
+    //return glm::lookAt(m_position, m_zVector, m_yVector);
+}
+
+void Camera::SetViewMatrix()
+{
+    m_viewMat = glm::lookAt(m_position, m_zVector, m_yVector);
 }
 
 //-------- Vertical FOV --------//
