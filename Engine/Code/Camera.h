@@ -9,33 +9,34 @@
 
 struct App;
 
-struct CameraSettings
-{
-	glm::vec3 position;
-	glm::vec3 target;
-
-	glm::vec3 upVector;
-};
-
 class Camera
 {
 private:
-	// Camera parameters
-	glm::vec3 m_position;
-	glm::vec3 m_zVector; // Forward vector
-	glm::vec3 m_yVector; // Up vector
+	// --- World --- //
+	glm::vec3 m_WorldUp = glm::vec3(0.0f, 1.0f, 0.0f);
 
-	// Projection parameters
+	// --- Camera Vectors --- //
+	glm::vec3 m_position; // Position
+	glm::vec3 m_xVector;  // xVector
+	glm::vec3 m_yVector;  // yVector
+	glm::vec3 m_zVector;  // zVector
+
+	float m_Yaw;
+	float m_Pitch;
+
+	// --- Projection parameters --- //
 	float m_verticalFov;
 	float m_aspectRatio;
 	float m_nearPlane;
 	float m_farPlane;
 
+	// --- Matrix --- //
 	glm::mat4 m_projectionMat;
-	glm::mat4 m_viewMat;
-
 	bool projectionMatChanged;
-	bool viewMatChanged;
+
+	glm::mat4 m_viewMat;
+	
+	float m_Sensitivity;
 	bool c_componentsChanged;
 
 public:
@@ -44,9 +45,10 @@ public:
 	void Update(App* app);
 
 	//-------- Movement --------//
-	void FPSMovement(App* app, glm::vec3& newPos, float speed);
+	glm::vec3 FPSMovement(App* app, glm::vec3 newPos, float speed);
 	void CameraRotation(App* app, float dt);
-	void CameraZoom(App* app, glm::vec3& newPos, float speed);
+	void UpdateVectors();
+	glm::vec3 CameraZoom(App* app, glm::vec3& newPos, float speed);
 
 	//-------- Matrix --------//
 	glm::mat4 GetProjectionMatrix() const;
@@ -78,7 +80,6 @@ public:
 	//-------- Camera Position --------//
 	void SetPosition(const glm::vec3 position);
 	glm::vec3 GetPosition() const;
-	void MoveCamera(glm::vec3 newPos);
 
 	//-------- Camera Vectors --------//
 	void SetZvector(glm::vec3 z);
@@ -91,9 +92,5 @@ public:
 	//-------- Camera View --------//
 	void LookAt(glm::vec3& reference);
 };
-
-glm::mat4 TransformScale(const glm::vec3& scaleFactors);
-
-glm::mat4 TransformPositionScale(const glm::vec3& pos, const glm::vec3& scaleFactors);
 
 #endif // CAMERA_H

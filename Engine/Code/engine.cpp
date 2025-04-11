@@ -238,7 +238,7 @@ void App::UpdateLights(App* app)
 
 void App::UpdateCameraUniforms(App* app)
 {
-    //UpdateLights(app);
+    UpdateLights(app);
 
     MapBuffer(app->entityUBO, GL_WRITE_ONLY);
     glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
@@ -259,9 +259,9 @@ void App::OnResizeWindow(int width, int height)
 {
     displaySize = vec2 (width, height);
     //Hacer esto para arreglar aspect ratio
-    //camera.SetAspectRatio(static_cast<float>(displaySize.x) / static_cast<float>(displaySize.y));
     primaryFBO.Clean();
     primaryFBO.CreateFBO(4, displaySize.x, displaySize.y);
+    camera.SetAspectRatio(static_cast<float>(displaySize.x) / static_cast<float>(displaySize.y));
 }
 
 void RenderScreenFillQuad(App* app, const FrameBuffer& aFBO)
@@ -368,8 +368,8 @@ void Init(App* app)
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
     // --- Lights --- //
-    //Light sun = { "Sun light", LightType_Directional, vec3(0.1, 0.1, 0.1), vec3(0.0, -1.0, 0.0), vec3(0.0) };
-    //app->lights.push_back(sun);
+    Light sun = { "Sun light", LightType_Directional, vec3(0.1, 0.1, 0.1), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    app->lights.push_back(sun);
 
     //Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
     //app->lights.push_back(b);
@@ -442,24 +442,106 @@ void Gui(App* app)
     ImGui::Separator();
     ImGui::Spacing();
 
-    if (ImGui::TreeNode("OpenGL Info"))
+    if (ImGui::TreeNode("Camera"))
     {
-        ImGui::Text("Version: %s", app->glInfo.version.c_str());
-        ImGui::Text("Renderer: %s", app->glInfo.renderer.c_str());
-        ImGui::Text("Vendor: %s", app->glInfo.vendor.c_str());
-        ImGui::Text("GLSL Version: %s", app->glInfo.glslVersion.c_str());
-
-        ImGui::Spacing();
-        ImGui::Separator();
+        // --- Position --- //
         ImGui::Spacing();
 
-        ImGui::Text("Extensions (%d):", static_cast<int>(app->glInfo.extensions.size()));
+        glm::vec3 pos = app->camera.GetPosition();
 
-        ImGui::BeginChild("##extensions", ImVec2(0, 200), true);
-        for (const auto& ext : app->glInfo.extensions) {
-            ImGui::Text("%s", ext.c_str());
-        }
-        ImGui::EndChild();
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Position");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", pos.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", pos.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", pos.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+
+        // --- Vectors --- //
+        ImGui::Spacing();
+        glm::vec3 xdir;
+        xdir= app->camera.GetXvector();
+
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "X Vector");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", xdir.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", xdir.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", xdir.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+
+        glm::vec3 ydir;
+        ydir = app->camera.GetYvector();
+
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Y Vector");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", ydir.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", ydir.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", ydir.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+
+        glm::vec3 zdir;
+        zdir = app->camera.GetZvector();
+
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Z Vector");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", zdir.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", zdir.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", zdir.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
 
         ImGui::TreePop();
     }
@@ -551,6 +633,32 @@ void Gui(App* app)
             ImGui::Separator();
             ImGui::Spacing();
         }
+
+        ImGui::TreePop();
+    }
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    if (ImGui::TreeNode("OpenGL Info"))
+    {
+        ImGui::Text("Version: %s", app->glInfo.version.c_str());
+        ImGui::Text("Renderer: %s", app->glInfo.renderer.c_str());
+        ImGui::Text("Vendor: %s", app->glInfo.vendor.c_str());
+        ImGui::Text("GLSL Version: %s", app->glInfo.glslVersion.c_str());
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::Text("Extensions (%d):", static_cast<int>(app->glInfo.extensions.size()));
+
+        ImGui::BeginChild("##extensions", ImVec2(0, 200), true);
+        for (const auto& ext : app->glInfo.extensions) {
+            ImGui::Text("%s", ext.c_str());
+        }
+        ImGui::EndChild();
 
         ImGui::TreePop();
     }
