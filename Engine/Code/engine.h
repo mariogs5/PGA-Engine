@@ -217,13 +217,21 @@ struct App
     std::vector<Texture>  textures;
     std::vector<Program>  programs;
 
-    // program index
-    u32 texturedGeometryProgramIdx;
+    // --- Program --- //
+    u32 texturedMeshProgramIdx;     // Mesh Program index
+    u32 texturedGeometryProgramIdx; // Render Quad Program index
 
-    // Patrick
-    u32 texturedMeshProgramIdx; // Program Index
+    // --- Floor Model --- //
+    u32 floorIdx;             // Model Index
+    u32 floorTextureUniform;  // Texture Index
+
+    // --- Patrick Model --- //
     u32 patrickIdx;             // Model Index
     u32 patrickTextureUniform;  // Texture Index
+
+    // --- Repo Model --- //
+    u32 repoIdx;             // Model Index
+    u32 repoTextureUniform;  // Texture Index
 
     
     // texture indices
