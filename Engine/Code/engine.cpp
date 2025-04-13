@@ -10,6 +10,7 @@
 #include <stb_image.h>
 #include <stb_image_write.h>
 #include "OpenGLErrorGuard.h"
+#include <format>
 
 void CreateEntity(App* app, u32 modelIndex, u32 textureIndex, glm::vec3 pos, glm::mat4 VP)
 {
@@ -101,20 +102,79 @@ void CreateNewLight(App* app, std::string name, LightType type, vec3 color, vec3
     app->lights.push_back(light);
 }
 
-void CreateDefaultLights(App* app) 
+void CreateDefaultLights(App* app)
 {
     app->lights.clear();
-    // TO DO: Crear las luces default
 
-    app->UpdateLights(app);
+    Light sun = {
+        "Sun",
+        LightType_Directional,
+        vec3(0.9f, 0.85f, 0.7f),  
+        vec3(-0.5f, -1.0f, 0.2f),
+        vec3(0.0f)
+    };
+    app->lights.push_back(sun);
+
+    // Accent point light (right)
+    Light pointRight = {
+        "WarmAccent",
+        LightType_Point,
+        vec3(0.8f, 0.6f, 0.4f), 
+        vec3(0.0f),
+        vec3(2.0f, 1.5f, 2.0f)
+    };
+    app->lights.push_back(pointRight);
+
+    // Accent point light (left)
+    Light pointLeft = {
+        "CoolAccent",
+        LightType_Point,
+        vec3(0.4f, 0.6f, 0.8f),     
+        vec3(0.0f),
+        vec3(-2.0f, 1.5f, -1.0f)
+    };
+    app->lights.push_back(pointLeft);
+
+    // Ambient fill light
+    Light fill = {
+        "AmbientFill",
+        LightType_Point,
+        vec3(0.3f, 0.4f, 0.5f), 
+        vec3(0.0f),
+        vec3(0.0f, 3.0f, 0.0f)
+    };
+    app->lights.push_back(fill);
 }
 
 void CreateLightStressTest(App* app)
 {
     app->lights.clear();
-    // TO DO: Crear el stress test
 
-    app->UpdateLights(app);
+    Light sun = {
+       "Sun",
+       LightType_Directional,
+       vec3(0.9f, 0.85f, 0.7f),
+       vec3(-0.5f, -1.0f, 0.2f),
+       vec3(0.0f)
+    };
+    app->lights.push_back(sun);
+    
+    for (int i = 0; i < 31; i++) 
+    {
+        for (int j = 0; j < 31; j++)
+        {
+            Light light = {
+                std::format("Stress Light {}", i),
+                LightType_Point,
+                vec3(0.3f, 0.4f, 0.5f),
+                vec3(0.0f),
+                vec3(0.0f, 3.0f, 0.0f)
+            };
+            app->lights.push_back(light);
+        }
+    }
+    
+    //app->UpdateLights(app);
 }
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName)
@@ -449,20 +509,7 @@ void Init(App* app)
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
     // --- Lights --- //
-    Light sun = { "Sun light", LightType_Directional, vec3(1, 1, 1), vec3(0.0, -1.0, 0.0), vec3(0.0) };
-    app->lights.push_back(sun);
-
-    //Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
-    //app->lights.push_back(b);
-
-    //Light c = { "Point 1", LightType_Point, vec3(0.0, 0.2, 0.0), vec3(0, 0, 0), vec3(-20, 0, 0) };
-    //app->lights.push_back(c);
-
-    //Light d = { "Point  1", LightType_Point, vec3(0.2, 0.0, 0.0), vec3(0, 0, 0), vec3(20, 0, 0) };
-    //app->lights.push_back(d);
-     
-    Light d = { "Point 1", LightType_Point, vec3(1, 1, 1), vec3(0, 0, 0), vec3(0, 0, 0) };
-    app->lights.push_back(d);
+    CreateDefaultLights(app);
 
     // --- Global (Lights) UBO --- //
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
@@ -628,6 +675,10 @@ void Gui(App* app)
 
     if (ImGui::TreeNode("Lights"))
     {
+        ImGui::Spacing();
+
+        ImGui::Text("Number of Lights: %d", app->lights.size());
+            
         ImGui::Spacing();
 
         bool lightChanged = false;
