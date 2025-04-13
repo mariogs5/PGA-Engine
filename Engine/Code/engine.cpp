@@ -278,10 +278,16 @@ void UpdateGBuffer(App* app)
     Program& programTexturedGeometry = app->programs[app->texturedGeometryProgramIdx];
     glUseProgram(programTexturedGeometry.handle);
 
-    // Get the uniform location once per frame (or cache it during initialization)
-    GLint gBufferProgramLoc = glGetUniformLocation(programTexturedGeometry.handle, "uGBuffer");
+    if (app->currentGBufferItem == 3)
+    {
+        GLfloat nearPlaneProgramLoc = glGetUniformLocation(programTexturedGeometry.handle, "uNear");
+        glUniform1f(nearPlaneProgramLoc, app->camera.GetNearPlane());
 
-    // Update the uniform value from your app state
+        GLfloat farPlaneProgramLoc = glGetUniformLocation(programTexturedGeometry.handle, "uFar");
+        glUniform1f(farPlaneProgramLoc, app->camera.GetFarPlane());
+    }
+
+    GLint gBufferProgramLoc = glGetUniformLocation(programTexturedGeometry.handle, "uGBuffer");
     glUniform1i(gBufferProgramLoc, app->currentGBufferItem);
 
     glUseProgram(0);
