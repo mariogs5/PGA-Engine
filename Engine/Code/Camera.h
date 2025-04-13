@@ -67,7 +67,7 @@ public:
 	float GetHorizontalFov() const;
 
 	//-------- Aspect Ratio --------//
-	void SetAspectRatio(float AspectRatio);
+	void SetAspectRatio(App* app, float AspectRatio);
 
 	//-------- Far Plane --------//
 	void SetFarPlane(float far_plane);

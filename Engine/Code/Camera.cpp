@@ -5,14 +5,14 @@ Camera::Camera()
     :
     m_WorldUp(glm::vec3(0, 1, 0)),
 
-    m_position(glm::vec3(0, 1, 10)),
-    m_zVector(glm::vec3(0, 0, -1)),
+    m_position(glm::vec3(0, 3.5, -18)),
+    m_zVector(glm::vec3(0, 0, 1)),
     m_yVector(glm::vec3(0, 1, 0.)),
     m_xVector(glm::normalize(glm::cross(m_WorldUp, m_zVector))),
 
     m_Sensitivity(5.0f),
 
-    m_Yaw(-90.0f),
+    m_Yaw(90.0f),
     m_Pitch(0.0f),
 
     m_verticalFov(glm::radians(60.0f)),
@@ -167,9 +167,11 @@ void Camera::SetViewMatrix()
 }
 
 //-------- Aspect Ratio --------//
-void Camera::SetAspectRatio(float aspectRatio) {
+void Camera::SetAspectRatio(App* app, float aspectRatio) {
     m_aspectRatio = aspectRatio;
     SetProjectionMatrix();
+    SetViewMatrix();
+    app->UpdateCameraUniforms(app);
 }
 
 //-------- Camera View --------//

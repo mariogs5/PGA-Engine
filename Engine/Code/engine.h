@@ -70,6 +70,7 @@ struct Entity
 {
     glm::mat4 worldMatrix;
     u32 modelIndex;
+    u32 textureIndex;
     u32 entityBufferOffset;
     u32 entityBufferSize;
 };
@@ -222,24 +223,38 @@ struct App
     u32 texturedGeometryProgramIdx; // Render Quad Program index
 
     // --- Floor Model --- //
-    u32 floorIdx;             // Model Index
-    u32 floorTextureUniform;  // Texture Index
+    u32 floorIdx; // Model Index
+
+    // --- Cube Model --- //
+    u32 cubeIdx; // Model Index
+
+    // --- Sphere Model --- //
+    u32 sphereIdx; // Model Index
+
+    // --- Cone Model --- //
+    u32 coneIdx; // Model Index
+
+    // --- Torus Model --- //
+    u32 torusIdx; // Model Index
 
     // --- Patrick Model --- //
-    u32 patrickIdx;             // Model Index
-    u32 patrickTextureUniform;  // Texture Index
+    u32 patrickIdx; // Model Index
+    u32 textureUniform; // Texture Index
 
     // --- Repo Model --- //
-    u32 repoIdx;             // Model Index
-    u32 repoTextureUniform;  // Texture Index
-
+    u32 repoBodyIdx; // Model Index
+    u32 repoEyesIdx; // Model Index
+    u32 repoPupilsIdx; // Model Index
     
     // texture indices
+    u32 patrickTexIdx;
     u32 diceTexIdx;
     u32 whiteTexIdx;
     u32 blackTexIdx;
     u32 normalTexIdx;
     u32 magentaTexIdx;
+    u32 greenTexIdx;
+    u32 skyBlueTexIdx;
 
     // Mode
     Mode mode;

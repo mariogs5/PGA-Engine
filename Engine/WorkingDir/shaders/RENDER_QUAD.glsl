@@ -45,10 +45,11 @@ layout(location = 0) out vec4 oColor;
 
 vec3 CalcPointLight(Light alight, vec3 aNormal, vec3 aPosition, vec3 aViewDir)
 {
+    vec3 viewDir = normalize(aViewDir);
     vec3 lightDir = normalize(alight.position - aPosition);
     float diff = max(dot(aNormal, lightDir), 0.0);
     vec3 reflectDir = reflect(-lightDir, aNormal);
-    float spec = pow(max(dot(aViewDir, reflectDir), 0.0), 2.0);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2.0);
 
     float distance = length(alight.position - aPosition);
 
@@ -69,10 +70,11 @@ vec3 CalcPointLight(Light alight, vec3 aNormal, vec3 aPosition, vec3 aViewDir)
 
 vec3 CalcDirLight(Light alight, vec3 aNormal, vec3 aViewDir)
 {
+    vec3 viewDir = normalize(aViewDir);
     vec3 lightDir = normalize(-alight.direction);
     float diff = max(dot(aNormal, lightDir), 0.0);
     vec3 reflectDir = reflect(-lightDir, aNormal);
-    float spec = pow(max(dot(aViewDir, reflectDir), 0.0), 2.0);
+    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2.0);
 
     vec3 ambient = alight.color * 0.2;
     vec3 diffuse = alight.color * diff;
@@ -116,7 +118,7 @@ void main()
 
             float linearDepth = (uNear * uFar) / (uFar - Depth * (uFar - uNear));
     
-            float maxVisualizationDepth = 50.0;
+            float maxVisualizationDepth = 40.0;
             float normalizedDepth = linearDepth / maxVisualizationDepth;
     
             normalizedDepth = clamp(normalizedDepth, 0.0, 1.0);

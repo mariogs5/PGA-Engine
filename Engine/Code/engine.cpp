@@ -11,30 +11,64 @@
 #include <stb_image_write.h>
 #include "OpenGLErrorGuard.h"
 
+void CreateEntity(App* app, u32 modelIndex, u32 textureIndex, glm::vec3 pos, glm::mat4 VP)
+{
+    AlignHead(app->entityUBO, app->uniformBlockAlignment);
+    Entity entity;
+    entity.entityBufferOffset = app->entityUBO.head;
+    entity.worldMatrix = glm::translate(pos);
+    entity.modelIndex = modelIndex;
+    entity.textureIndex = textureIndex;
+    PushMat4(app->entityUBO, entity.worldMatrix);
+    PushMat4(app->entityUBO, VP * entity.worldMatrix);
+    entity.entityBufferSize = app->entityUBO.head - entity.entityBufferOffset;
+    app->entities.push_back(entity);
+}
+
 void CreateEntities(App* app) 
 {
     // --- Default textures --- //
     app->diceTexIdx = LoadTexture2D(app, "dice.png");
     app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
+    app->blackTexIdx = LoadTexture2D(app, "color_black.png");
     app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
     app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
-
-    // --------- Programs --------- //
-    //app->texturedMeshProgramIdx = LoadProgram(app, "shaders/RENDER_GEOMETRY.glsl", "RENDER_GEOMETRY");   // Render Geometry
-    //app->texturedGeometryProgramIdx = LoadProgram(app, "shaders/RENDER_QUAD.glsl", "TEXTURED_GEOMETRY"); // Textured Quad
+    app->greenTexIdx = LoadTexture2D(app, "color_green.png");
+    app->skyBlueTexIdx = LoadTexture2D(app, "color_skyblue.png");
 
     Program& ModelProgram = app->programs[app->texturedMeshProgramIdx];
 
     //app->UpdateLights(app);
+
+    app->textureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
 
       // --- Entities UBO --- //
     app->entityUBO = CreateConstantBuffer(app->maxUniformBufferSize);
     MapBuffer(app->entityUBO, GL_WRITE_ONLY);
     glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
 
+    // --- Floor Model --- //
+    app->floorIdx = LoadModel(app, "Models/Plane.obj");
+    CreateEntity(app, app->floorIdx, app->whiteTexIdx, glm::vec3(0, 0, 0), VP);
+
+    // --- Cube Model --- //
+    app->cubeIdx = LoadModel(app, "Models/Cube.obj");
+    CreateEntity(app, app->cubeIdx, app->normalTexIdx, glm::vec3(-7, 1, 0), VP);
+
+    // --- Sphere Model --- //
+    app->sphereIdx = LoadModel(app, "Models/Sphere.obj");
+    CreateEntity(app, app->sphereIdx, app->greenTexIdx, glm::vec3(-3, 0, 7), VP);
+
+    // --- Cone Model --- //
+    app->coneIdx = LoadModel(app, "Models/Cone.obj");
+    CreateEntity(app, app->coneIdx, app->magentaTexIdx, glm::vec3(7, 0, 0), VP);
+
+    // --- Torus Model --- //
+    app->torusIdx = LoadModel(app, "Models/Torus.obj");
+    CreateEntity(app, app->torusIdx, app->skyBlueTexIdx, glm::vec3(0, 0, -10), VP);
+
     // --- Patrick Model --- //
     app->patrickIdx = LoadModel(app, "Patrick/Patrick.obj");
-    app->patrickTextureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
 
     AlignHead(app->entityUBO, app->uniformBlockAlignment);
     Entity patrick;
@@ -48,18 +82,15 @@ void CreateEntities(App* app)
 
 
     // --- Repo Model --- //
-    //app->repoTextureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
-    app->repoIdx = LoadModel(app, "Models/Patrick.obj");
+    glm::vec3 repoPos = glm::vec3(3, 0, 7);
+    app->repoBodyIdx = LoadModel(app, "Models/RepoBody.obj");
+    CreateEntity(app, app->repoBodyIdx, app->magentaTexIdx, repoPos, VP);
 
-    AlignHead(app->entityUBO, app->uniformBlockAlignment);
-    Entity repo;
-    repo.entityBufferOffset = app->entityUBO.head;
-    repo.worldMatrix = glm::translate(glm::vec3(5, 0, 0));
-    repo.modelIndex = app->repoIdx;
-    PushMat4(app->entityUBO, repo.worldMatrix);
-    PushMat4(app->entityUBO, VP * repo.worldMatrix);
-    repo.entityBufferSize = app->entityUBO.head - repo.entityBufferOffset;
-    app->entities.push_back(repo);
+    app->repoEyesIdx = LoadModel(app, "Models/RepoEyes.obj");
+    CreateEntity(app, app->repoEyesIdx, app->whiteTexIdx, repoPos, VP);
+
+    app->repoPupilsIdx = LoadModel(app, "Models/RepoPupils.obj");
+    CreateEntity(app, app->repoPupilsIdx, app->blackTexIdx, repoPos, VP);
 
     UnmapBuffer(app->entityUBO);
 }
@@ -335,7 +366,7 @@ void App::OnResizeWindow(int width, int height)
 {
     displaySize = vec2 (width, height);
     //Hacer esto para arreglar aspect ratio
-    camera.SetAspectRatio(static_cast<float>(displaySize.x) / static_cast<float>(displaySize.y));
+    camera.SetAspectRatio(this, static_cast<float>(displaySize.x) / static_cast<float>(displaySize.y));
     primaryFBO.Clean();
     primaryFBO.CreateFBO(4, displaySize.x, displaySize.y);
 }
@@ -409,31 +440,16 @@ void Init(App* app)
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, app->embeddedElements);
     glBindVertexArray(0);
 
-    // --- Default textures --- //
-    /*app->diceTexIdx = LoadTexture2D(app, "dice.png");
-    app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
-    app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
-    app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");*/
-
     // --------- Programs --------- //
     app->texturedMeshProgramIdx = LoadProgram(app, "shaders/RENDER_GEOMETRY.glsl", "RENDER_GEOMETRY");   // Render Geometry
     app->texturedGeometryProgramIdx = LoadProgram(app, "shaders/RENDER_QUAD.glsl", "TEXTURED_GEOMETRY"); // Textured Quad
-
-    // --- Patrick Model --- //
-    //Program& ModelProgram = app->programs[app->texturedMeshProgramIdx];
-    //app->patrickTextureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
-    //app->patrickIdx = LoadModel(app, "Patrick/Patrick.obj");
-
-    //// --- Repo Model --- //
-    //app->repoTextureUniform = glGetUniformLocation(ModelProgram.handle, "uTexture");
-    //app->repoIdx = LoadModel(app, "Models/Repo.obj");
 
     // --- Create Uniforms --- //
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
     // --- Lights --- //
-    Light sun = { "Sun light", LightType_Directional, vec3(0.1, 0.1, 0.1), vec3(0.0, -1.0, 0.0), vec3(0.0) };
+    Light sun = { "Sun light", LightType_Directional, vec3(1, 1, 1), vec3(0.0, -1.0, 0.0), vec3(0.0) };
     app->lights.push_back(sun);
 
     //Light b = { "Directional 2", LightType_Directional, vec3(0.0, 0.2, 0.0), vec3(0.0, -1.0, 0.0), vec3(0.0) };
@@ -445,56 +461,20 @@ void Init(App* app)
     //Light d = { "Point  1", LightType_Point, vec3(0.2, 0.0, 0.0), vec3(0, 0, 0), vec3(20, 0, 0) };
     //app->lights.push_back(d);
      
-    Light d = { "Point 1", LightType_Point, vec3(0.1, 0.1, 0.1), vec3(0, 0, 0), vec3(0, 0, 0) };
+    Light d = { "Point 1", LightType_Point, vec3(1, 1, 1), vec3(0, 0, 0), vec3(0, 0, 0) };
     app->lights.push_back(d);
 
-    // --- Global UBO --- //
+    // --- Global (Lights) UBO --- //
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
-    MapBuffer(app->globalUBO, GL_WRITE_ONLY);
-    PushVec3(app->globalUBO, app->camera.GetPosition());
+    app->UpdateLights(app);
 
-    PushUInt(app->globalUBO, app->lights.size());
-    for (u32 i = 0; i < app->lights.size(); ++i)
-    {
-        AlignHead(app->globalUBO, sizeof(vec4));
-
-        Light& light = app->lights[i];
-        PushUInt(app->globalUBO, light.type);
-        PushVec3(app->globalUBO, light.color);
-        PushVec3(app->globalUBO, light.direction);
-        PushVec3(app->globalUBO, light.position);
-    }
-
-    UnmapBuffer(app->globalUBO);
-
-    //// --- Entities UBO --- //
-    //app->entityUBO = CreateConstantBuffer(app->maxUniformBufferSize);
-    //MapBuffer(app->entityUBO, GL_WRITE_ONLY);
-    //glm::mat4 VP = app->camera.GetProjectionMatrix() * app->camera.GetViewMatrix();
-    //for (int z = -2; z != 2; ++z) 
-    //{
-    //    for (int x = -2; x != 2; ++x)
-    //    {
-    //        AlignHead(app->entityUBO, app->uniformBlockAlignment);
-    //        Entity entity;
-    //        entity.entityBufferOffset = app->entityUBO.head;
-    //        entity.worldMatrix = glm::translate(glm::vec3(x * 5, 0, z * 5));
-    //        entity.modelIndex = app->patrickIdx;
-
-    //        PushMat4(app->entityUBO, entity.worldMatrix);
-    //        PushMat4(app->entityUBO, VP * entity.worldMatrix);
-    //        entity.entityBufferSize = app->entityUBO.head - entity.entityBufferOffset;
-    //       
-    //        app->entities.push_back(entity);
-    //    }
-    //}
-    //UnmapBuffer(app->entityUBO);
-
+    // --- Entities UBO --- //
     CreateEntities(app);
 
     app->mode = Mode_Forward_Geometry;
 
-    app->primaryFBO.CreateFBO(4, app->displaySize.x, app->displaySize.y);
+    //app->primaryFBO.CreateFBO(4, app->displaySize.x, app->displaySize.y);
+    app->OnResizeWindow(app->displaySize.x, app->displaySize.y);
 }
 
 void Gui(App* app)
@@ -795,7 +775,7 @@ void Render(App* app)
             {
                 glBindBufferRange(GL_UNIFORM_BUFFER, 1, app->entityUBO.handle, entity.entityBufferOffset, entity.entityBufferSize);
 
-                Model& model = app->models[app->patrickIdx];
+                Model& model = app->models[entity.modelIndex];
                 Mesh& mesh = app->meshes[model.meshIdx];
 
                 for (u32 i = 0; i < mesh.submeshes.size(); ++i) {
@@ -805,9 +785,18 @@ void Render(App* app)
                     u32 submeshMaterialIdx = model.materialIdx[i];
                     Material& submeshMaterial = app->materials[submeshMaterialIdx];
 
-                    glActiveTexture(GL_TEXTURE0);
-                    glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
-                    glUniform1i(app->patrickTextureUniform, 0);
+                    if (submeshMaterial.albedoTextureIdx > 0) 
+                    {
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, app->textures[submeshMaterial.albedoTextureIdx].handle);
+                        glUniform1i(app->textureUniform, 0);
+                    }
+                    else 
+                    {
+                        glActiveTexture(GL_TEXTURE0);
+                        glBindTexture(GL_TEXTURE_2D, app->textures[entity.textureIndex].handle);
+                        glUniform1i(app->textureUniform, 0);
+                    }
 
                     Submesh& submesh = mesh.submeshes[i];
                     glDrawElements(GL_TRIANGLES, submesh.indices.size(), GL_UNSIGNED_INT, (void*)(u64)submesh.indexOffset);
