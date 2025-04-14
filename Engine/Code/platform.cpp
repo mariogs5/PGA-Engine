@@ -122,12 +122,7 @@ void OnGlfwCloseWindow(GLFWwindow* window)
 
 int main()
 {
-    App app         = {};
-    app.deltaTime   = 1.0f/60.0f;
-    app.displaySize = ivec2(WINDOW_WIDTH, WINDOW_HEIGHT);
-    app.isRunning   = true;
-
-		glfwSetErrorCallback(OnGlfwError);
+    glfwSetErrorCallback(OnGlfwError);
 
     if (!glfwInit())
     {
@@ -135,17 +130,28 @@ int main()
         return -1;
     }
 
+    // --- Fullscreen Code --- //
+    GLFWmonitor* monitor = glfwGetPrimaryMonitor();
+    const GLFWvidmode* mode = glfwGetVideoMode(monitor);
+
+    App app = {};
+    app.deltaTime = 1.0f / 60.0f;
+    app.displaySize = ivec2(mode->width, mode->height);
+    app.isRunning = true;
+
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_FORWARD_COMPAT, GL_TRUE);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
 
-    GLFWwindow* window = glfwCreateWindow(WINDOW_WIDTH, WINDOW_HEIGHT, WINDOW_TITLE, NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(mode->width, mode->height, WINDOW_TITLE, NULL, NULL);
     if (!window)
     {
         ELOG("glfwCreateWindow() failed\n");
         return -1;
     }
+
+    glfwMaximizeWindow(window);
 
     glfwSetWindowUserPointer(window, &app);
 
