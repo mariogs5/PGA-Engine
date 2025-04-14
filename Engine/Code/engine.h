@@ -292,6 +292,9 @@ struct App
     std::vector<std::string> GBufferItems;
     int currentGBufferItem;
 
+    bool lightDebug;
+    std::vector<Entity> lightModels;
+
     void UpdateLights(App* app);
 
     void UpdateCameraUniforms(App* app);
@@ -313,4 +316,16 @@ GLuint FindVAO(Mesh& mesh, u32 submeshIndex, const Program& program);
 void CreateVAO(Mesh& mesh, Submesh& submesh, const Program& program, GLuint& vaoHandle);
 
 OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo);
+
+// --- ImGui Info Window --- //
+void InfoWindow(App* app);
+
+void ImGuiCameraTab(App* app);
+
+void ImGuiGbufferTab(App* app);
+
+void ImGuiLightTab(App* app);
+
+void ImGuiGLInfoTab(App* app);
+
 

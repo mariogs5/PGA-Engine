@@ -80,7 +80,7 @@ void Camera::Update(App * app)
 
         LookAt(center);
 
-        SetPosition(glm::vec3 (0.0f, 1.0f, 10.0f));
+        SetPosition(glm::vec3 (0.0f, 3.5f, -18.0f));
 
         c_componentsChanged = true;
     }

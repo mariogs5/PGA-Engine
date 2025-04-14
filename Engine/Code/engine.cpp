@@ -11,6 +11,7 @@
 #include <stb_image_write.h>
 #include "OpenGLErrorGuard.h"
 #include <format>
+#include <imgui_impl_opengl3.h>
 
 void CreateEntity(App* app, u32 modelIndex, u32 textureIndex, glm::vec3 pos, glm::mat4 VP)
 {
@@ -141,7 +142,7 @@ void CreateDefaultLights(App* app)
         LightType_Point,
         vec3(0.3f, 0.4f, 0.5f), 
         vec3(0.0f),
-        vec3(0.0f, 3.0f, 0.0f)
+        vec3(0.0f, 3.0f, 0.0f) 
     };
     app->lights.push_back(fill);
 }
@@ -159,16 +160,23 @@ void CreateLightStressTest(App* app)
     };
     app->lights.push_back(sun);
     
-    for (int i = 0; i < 31; i++) 
-    {
-        for (int j = 0; j < 31; j++)
-        {
+    int gridSize = 31;
+    float totalSpan = 30.0f;          
+    float spacing = totalSpan / (gridSize - 1);
+    float halfSpan = totalSpan / 2.0f;
+
+    for (int i = 0; i < gridSize; i++) {
+        for (int j = 0; j < gridSize; j++) {
+            // Calculate positions centered around (0, 3, 0)
+            float x = -halfSpan + i * spacing;
+            float z = -halfSpan + j * spacing;
+
             Light light = {
-                std::format("Stress Light {}", i),
+                std::format("Stress Light {}", i * gridSize + j),
                 LightType_Point,
-                vec3(0.3f, 0.4f, 0.5f),
-                vec3(0.0f),
-                vec3(0.0f, 3.0f, 0.0f)
+                vec3(0.3f, 0.4f, 0.5f),    // Color
+                vec3(0.0f),                // Direction (unused for point lights)
+                vec3(x, 3.0f, z)           // Position
             };
             app->lights.push_back(light);
         }
@@ -528,240 +536,7 @@ void Gui(App* app)
 {
     ImGui::DockSpaceOverViewport(NULL, ImGuiDockNodeFlags_PassthruCentralNode);
 
-    ImGui::Begin("Info");
-    ImGui::Spacing();
-    ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    if (ImGui::TreeNode("Camera"))
-    {
-        // --- Position --- //
-        ImGui::Spacing();
-
-        glm::vec3 pos = app->camera.GetPosition();
-
-        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Position");
-        ImGui::Spacing();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
-        ImGui::Text("X: %8.3f", pos.x);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
-        ImGui::Text("Y: %8.3f", pos.y);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
-        ImGui::Text("Z: %8.3f", pos.z);
-        ImGui::PopStyleColor();
-        ImGui::Spacing();
-
-        // --- Vectors --- //
-        ImGui::Spacing();
-        glm::vec3 xdir;
-        xdir= app->camera.GetXvector();
-
-        ImGui::Spacing();
-        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "X Vector");
-        ImGui::Spacing();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
-        ImGui::Text("X: %8.3f", xdir.x);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
-        ImGui::Text("Y: %8.3f", xdir.y);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
-        ImGui::Text("Z: %8.3f", xdir.z);
-        ImGui::PopStyleColor();
-        ImGui::Spacing();
-
-        glm::vec3 ydir;
-        ydir = app->camera.GetYvector();
-
-        ImGui::Spacing();
-        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Y Vector");
-        ImGui::Spacing();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
-        ImGui::Text("X: %8.3f", ydir.x);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
-        ImGui::Text("Y: %8.3f", ydir.y);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
-        ImGui::Text("Z: %8.3f", ydir.z);
-        ImGui::PopStyleColor();
-        ImGui::Spacing();
-
-        glm::vec3 zdir;
-        zdir = app->camera.GetZvector();
-
-        ImGui::Spacing();
-        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Z Vector");
-        ImGui::Spacing();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
-        ImGui::Text("X: %8.3f", zdir.x);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
-        ImGui::Text("Y: %8.3f", zdir.y);
-        ImGui::PopStyleColor();
-
-        ImGui::SameLine();
-
-        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
-        ImGui::Text("Z: %8.3f", zdir.z);
-        ImGui::PopStyleColor();
-        ImGui::Spacing();
-
-        ImGui::TreePop();
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    if (ImGui::TreeNode("Render"))
-    {
-        ImGui::Spacing();
-        ImGui::Text("GBuffer Modes:");
-        ImGui::Spacing();
-
-        if (ImGui::BeginCombo(" ", app->GBufferItems[app->currentGBufferItem].c_str())) {
-            for (int i = 0; i < app->GBufferItems.size(); i++) {
-                const bool isSelected = (app->currentGBufferItem == i);
-                if (ImGui::Selectable(app->GBufferItems[i].c_str(), isSelected)) {
-                    app->currentGBufferItem = i;
-                    // Handle the GBuffer change here (e.g., update shader uniform)
-                    UpdateGBuffer(app);
-                }
-
-                // Set the initial focus when opening the combo
-                if (isSelected) {
-                    ImGui::SetItemDefaultFocus();
-                }
-            }
-            ImGui::EndCombo();
-        }
-        ImGui::TreePop();
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    if (ImGui::TreeNode("Lights"))
-    {
-        ImGui::Spacing();
-
-        ImGui::Text("Number of Lights: %d", app->lights.size());
-            
-        ImGui::Spacing();
-
-        bool lightChanged = false;
-
-        for (auto& light : app->lights)
-        {
-            ImGui::Text(light.name.c_str());
-            vec3 checkVector;
-
-            ImGui::PushID(&light);
-            float color[3] = { light.color.x, light.color.y ,light.color.z };
-            ImGui::DragFloat3("Color", color, 0.01, 0.0, 1.0);
-            checkVector = vec3(color[0], color[1], color[2]);
-
-            if (checkVector != light.color)
-            {
-                light.color = checkVector;
-                lightChanged = true;
-            }
-
-            if (light.type == 0) 
-            {
-                float direction[3] = { light.direction.x, light.direction.y ,light.direction.z };
-                ImGui::DragFloat3("Direction", direction, 0.01, -1.0, 1.0);
-                checkVector = vec3(direction[0], direction[1], direction[2]);
-
-                if (checkVector != light.direction)
-                {
-                    light.direction = checkVector;
-                    lightChanged = true;
-                }
-            }
-
-            float position[3] = { light.position.x, light.position.y ,light.position.z };
-            ImGui::DragFloat3("Position", position);
-            checkVector = vec3(position[0], position[1], position[2]);
-
-            if (checkVector != light.position)
-            {
-                light.position = checkVector;
-                lightChanged = true;
-            }
-            ImGui::PopID();
-            if (lightChanged)
-            {
-                app->UpdateLights(app);
-            }
-
-            ImGui::Spacing();
-            ImGui::Separator();
-            ImGui::Spacing();
-        }
-
-        ImGui::TreePop();
-    }
-
-    ImGui::Spacing();
-    ImGui::Separator();
-    ImGui::Spacing();
-
-    if (ImGui::TreeNode("OpenGL Info"))
-    {
-        ImGui::Text("Version: %s", app->glInfo.version.c_str());
-        ImGui::Text("Renderer: %s", app->glInfo.renderer.c_str());
-        ImGui::Text("Vendor: %s", app->glInfo.vendor.c_str());
-        ImGui::Text("GLSL Version: %s", app->glInfo.glslVersion.c_str());
-
-        ImGui::Spacing();
-        ImGui::Separator();
-        ImGui::Spacing();
-
-        ImGui::Text("Extensions (%d):", static_cast<int>(app->glInfo.extensions.size()));
-
-        ImGui::BeginChild("##extensions", ImVec2(0, 200), true);
-        for (const auto& ext : app->glInfo.extensions) {
-            ImGui::Text("%s", ext.c_str());
-        }
-        ImGui::EndChild();
-
-        ImGui::TreePop();
-    }
-
-    ImGui::End();
+    InfoWindow(app);
 }
 
 void Update(App* app)
@@ -999,5 +774,273 @@ OpenGLInfo GetOpenGLInfo(OpenGLInfo& glInfo)
     }
 
     return glInfo;
+}
+
+void InfoWindow(App* app)
+{
+    ImGui::Begin("Info");
+    ImGui::Spacing();
+    ImGui::Text("FPS: %f", 1.0f / app->deltaTime);
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGuiCameraTab(app); // Camera 
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGuiGbufferTab(app); // GBuffer
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGuiLightTab(app); // Lights
+
+    ImGui::Spacing();
+    ImGui::Separator();
+    ImGui::Spacing();
+
+    ImGuiGLInfoTab(app); // OpenGl Info
+
+    ImGui::End();
+}
+
+void ImGuiCameraTab(App* app)
+{
+    if (ImGui::TreeNodeEx("Camera", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        // --- Position --- //
+        ImGui::Spacing();
+
+        glm::vec3 pos = app->camera.GetPosition();
+
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Position");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", pos.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", pos.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", pos.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+
+        // --- Vectors --- //
+        ImGui::Spacing();
+        glm::vec3 xdir;
+        xdir = app->camera.GetXvector();
+
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "X Vector");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", xdir.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", xdir.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", xdir.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+
+        glm::vec3 ydir;
+        ydir = app->camera.GetYvector();
+
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Y Vector");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", ydir.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", ydir.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", ydir.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+
+        glm::vec3 zdir;
+        zdir = app->camera.GetZvector();
+
+        ImGui::Spacing();
+        ImGui::TextColored(ImVec4(1, 0.5, 0.5, 1), "Z Vector");
+        ImGui::Spacing();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(1, 0.3, 0.3, 1));
+        ImGui::Text("X: %8.3f", zdir.x);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 1, 0.3, 1));
+        ImGui::Text("Y: %8.3f", zdir.y);
+        ImGui::PopStyleColor();
+
+        ImGui::SameLine();
+
+        ImGui::PushStyleColor(ImGuiCol_Text, ImVec4(0.3, 0.5, 1, 1));
+        ImGui::Text("Z: %8.3f", zdir.z);
+        ImGui::PopStyleColor();
+        ImGui::Spacing();
+
+        ImGui::TreePop();
+    }
+}
+
+void ImGuiGbufferTab(App* app)
+{
+    if (ImGui::TreeNodeEx("Render", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Spacing();
+        ImGui::Text("GBuffer Modes:");
+        ImGui::Spacing();
+
+        if (ImGui::BeginCombo(" ", app->GBufferItems[app->currentGBufferItem].c_str())) {
+            for (int i = 0; i < app->GBufferItems.size(); i++) {
+                const bool isSelected = (app->currentGBufferItem == i);
+                if (ImGui::Selectable(app->GBufferItems[i].c_str(), isSelected)) {
+                    app->currentGBufferItem = i;
+                    // Handle the GBuffer change here (e.g., update shader uniform)
+                    UpdateGBuffer(app);
+                }
+
+                // Set the initial focus when opening the combo
+                if (isSelected) {
+                    ImGui::SetItemDefaultFocus();
+                }
+            }
+            ImGui::EndCombo();
+        }
+        ImGui::TreePop();
+    }
+}
+
+void ImGuiLightTab(App* app)
+{
+    if (ImGui::TreeNodeEx("Lights", ImGuiTreeNodeFlags_DefaultOpen))
+    {
+        ImGui::Spacing();
+
+        ImGui::Text("Number of Lights: %d", app->lights.size());
+
+        ImGui::Spacing();
+
+        if (ImGui::Button("Create Default Lighting"))
+        {
+            CreateDefaultLights(app);
+        }
+        ImGui::SameLine();
+        if (ImGui::Button("Lighting Stress Test"))
+        {
+            CreateLightStressTest(app);
+        }
+
+        bool lightChanged = false;
+
+        for (auto& light : app->lights)
+        {
+            ImGui::Text(light.name.c_str());
+            vec3 checkVector;
+
+            ImGui::PushID(&light);
+            float color[3] = { light.color.x, light.color.y ,light.color.z };
+            ImGui::DragFloat3("Color", color, 0.01, 0.0, 1.0);
+            checkVector = vec3(color[0], color[1], color[2]);
+
+            if (checkVector != light.color)
+            {
+                light.color = checkVector;
+                lightChanged = true;
+            }
+
+            if (light.type == 0)
+            {
+                float direction[3] = { light.direction.x, light.direction.y ,light.direction.z };
+                ImGui::DragFloat3("Direction", direction, 0.01, -1.0, 1.0);
+                checkVector = vec3(direction[0], direction[1], direction[2]);
+
+                if (checkVector != light.direction)
+                {
+                    light.direction = checkVector;
+                    lightChanged = true;
+                }
+            }
+
+            float position[3] = { light.position.x, light.position.y ,light.position.z };
+            ImGui::DragFloat3("Position", position);
+            checkVector = vec3(position[0], position[1], position[2]);
+
+            if (checkVector != light.position)
+            {
+                light.position = checkVector;
+                lightChanged = true;
+            }
+            ImGui::PopID();
+            if (lightChanged)
+            {
+                app->UpdateLights(app);
+            }
+
+            ImGui::Spacing();
+            ImGui::Separator();
+            ImGui::Spacing();
+        }
+
+        ImGui::TreePop();
+    }
+}
+
+void ImGuiGLInfoTab(App* app)
+{
+    if (ImGui::TreeNode("OpenGL Info"))
+    {
+        ImGui::Text("Version: %s", app->glInfo.version.c_str());
+        ImGui::Text("Renderer: %s", app->glInfo.renderer.c_str());
+        ImGui::Text("Vendor: %s", app->glInfo.vendor.c_str());
+        ImGui::Text("GLSL Version: %s", app->glInfo.glslVersion.c_str());
+
+        ImGui::Spacing();
+        ImGui::Separator();
+        ImGui::Spacing();
+
+        ImGui::Text("Extensions (%d):", static_cast<int>(app->glInfo.extensions.size()));
+
+        ImGui::BeginChild("##extensions", ImVec2(0, 200), true);
+        for (const auto& ext : app->glInfo.extensions) {
+            ImGui::Text("%s", ext.c_str());
+        }
+        ImGui::EndChild();
+
+        ImGui::TreePop();
+    }
 }
 
