@@ -995,15 +995,19 @@ void ImGuiLightTab(App* app)
                 }
             }
 
-            float position[3] = { light.position.x, light.position.y ,light.position.z };
-            ImGui::DragFloat3("Position", position);
-            checkVector = vec3(position[0], position[1], position[2]);
-
-            if (checkVector != light.position)
+            if (light.type == 1) 
             {
-                light.position = checkVector;
-                lightChanged = true;
+                float position[3] = { light.position.x, light.position.y ,light.position.z };
+                ImGui::DragFloat3("Position", position);
+                checkVector = vec3(position[0], position[1], position[2]);
+
+                if (checkVector != light.position)
+                {
+                    light.position = checkVector;
+                    lightChanged = true;
+                }
             }
+
             ImGui::PopID();
             if (lightChanged)
             {
