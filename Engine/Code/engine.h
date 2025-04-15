@@ -87,7 +87,9 @@ struct Light
     LightType type; 
     vec3 color;        
     vec3 direction;    
-    vec3 position;   
+    vec3 position; 
+    int intensity;
+    int range;
 };
 
 struct FrameBuffer 

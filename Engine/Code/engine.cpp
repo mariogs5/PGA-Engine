@@ -97,9 +97,31 @@ void CreateEntities(App* app)
     UnmapBuffer(app->entityUBO);
 }
 
-void CreateNewLight(App* app, std::string name, LightType type, vec3 color, vec3 direction, vec3 position)
+void CreateDirectionalLight(App* app, std::string name, vec3 color, vec3 direction, float intensity)
 {
-    Light light = { name, type, color, direction, position };
+    Light light = {
+        name,                               // Name
+        LightType::LightType_Directional,   // Type
+        color,                              // Color
+        glm::normalize(direction),          // Direction
+        vec3(0.0f),                         // Position
+        glm::max(intensity, 0.01f),         // Intensity
+        0.0f                                // Range
+    };  
+    app->lights.push_back(light);
+}
+
+void CreatePointLight(App* app, std::string name, vec3 color, vec3 position, float intensity, float range)
+{
+    Light light = {
+        name,                                       // Name
+        LightType::LightType_Point,                 // Type
+        glm::clamp(color, vec3(0.0f), vec3(1.0f)),  // Color
+        vec3(0.0f),                                 // Direction
+        position,                                   // Position
+        glm::max(intensity, 0.01f),                 // Intensity
+        glm::max(range, 0.1f)                       // Range
+    };
     app->lights.push_back(light);
 }
 
@@ -107,60 +129,18 @@ void CreateDefaultLights(App* app)
 {
     app->lights.clear();
 
-    Light sun = {
-        "Sun",
-        LightType_Directional,
-        vec3(0.9f, 0.85f, 0.7f),  
-        vec3(-0.5f, -1.0f, 0.2f),
-        vec3(0.0f)
-    };
-    app->lights.push_back(sun);
+    // Name / Type / Color / Direction / Position / Intensity / Range
+    CreateDirectionalLight(app, "Sun", vec3(0.9f, 0.85f, 0.7f), vec3(-0.5f, -1.0f, 0.2f), 1.2f);
+    CreatePointLight(app, "Point 1", vec3(1.0f, 1.0f, 1.0f), vec3(0.0f, 2.0f, 0.0f), 5.0f, 3.0f);
 
-    // Accent point light (right)
-    Light pointRight = {
-        "WarmAccent",
-        LightType_Point,
-        vec3(0.8f, 0.6f, 0.4f), 
-        vec3(0.0f),
-        vec3(2.0f, 1.5f, 2.0f)
-    };
-    app->lights.push_back(pointRight);
-
-    // Accent point light (left)
-    Light pointLeft = {
-        "CoolAccent",
-        LightType_Point,
-        vec3(0.4f, 0.6f, 0.8f),     
-        vec3(0.0f),
-        vec3(-2.0f, 1.5f, -1.0f)
-    };
-    app->lights.push_back(pointLeft);
-
-    // Ambient fill light
-    Light fill = {
-        "AmbientFill",
-        LightType_Point,
-        vec3(0.3f, 0.4f, 0.5f), 
-        vec3(0.0f),
-        vec3(0.0f, 3.0f, 0.0f) 
-    };
-    app->lights.push_back(fill);
+    app->UpdateLights(app);
 }
 
 void CreateLightStressTest(App* app)
 {
     app->lights.clear();
-
-    Light sun = {
-       "Sun",
-       LightType_Directional,
-       vec3(0.9f, 0.85f, 0.7f),
-       vec3(-0.5f, -1.0f, 0.2f),
-       vec3(0.0f)
-    };
-    app->lights.push_back(sun);
     
-    int gridSize = 31;
+    int gridSize = 20;
     float totalSpan = 30.0f;          
     float spacing = totalSpan / (gridSize - 1);
     float halfSpan = totalSpan / 2.0f;
@@ -171,18 +151,18 @@ void CreateLightStressTest(App* app)
             float x = -halfSpan + i * spacing;
             float z = -halfSpan + j * spacing;
 
-            Light light = {
+            CreatePointLight(
+                app,
                 std::format("Stress Light {}", i * gridSize + j),
-                LightType_Point,
                 vec3(0.3f, 0.4f, 0.5f),    // Color
-                vec3(0.0f),                // Direction (unused for point lights)
-                vec3(x, 3.0f, z)           // Position
-            };
-            app->lights.push_back(light);
+                vec3(x, 0.5f, z),           // Position
+                20.0f,
+                1.0f
+            );
         }
     }
     
-    //app->UpdateLights(app);
+    app->UpdateLights(app);
 }
 
 GLuint CreateProgramFromSource(String programSource, const char* shaderName)
@@ -407,6 +387,8 @@ void App::UpdateLights(App* app)
         PushVec3(app->globalUBO, light.color);
         PushVec3(app->globalUBO, light.direction);
         PushVec3(app->globalUBO, light.position);
+        PushUInt(app->globalUBO, light.intensity);
+        PushUInt(app->globalUBO, light.range);
     }
     UnmapBuffer(app->globalUBO);
 }
@@ -516,12 +498,10 @@ void Init(App* app)
     glGetIntegerv(GL_MAX_UNIFORM_BLOCK_SIZE, &app->maxUniformBufferSize);
     glGetIntegerv(GL_UNIFORM_BUFFER_OFFSET_ALIGNMENT, &app->uniformBlockAlignment);
 
-    // --- Lights --- //
-    CreateDefaultLights(app);
-
     // --- Global (Lights) UBO --- //
     app->globalUBO = CreateConstantBuffer(app->maxUniformBufferSize);
-    app->UpdateLights(app);
+    CreateDefaultLights(app);
+    //app->UpdateLights(app);
 
     // --- Entities UBO --- //
     CreateEntities(app);

@@ -21,6 +21,8 @@ struct Light {
     vec3 color;
     vec3 direction;
     vec3 position;
+    int intensity;
+    int range;
 };
 
 layout(binding = 0, std140) uniform GlobalParams 
@@ -45,42 +47,41 @@ layout(location = 0) out vec4 oColor;
 
 vec3 CalcPointLight(Light alight, vec3 aNormal, vec3 aPosition, vec3 aViewDir)
 {
-    vec3 viewDir = normalize(aViewDir);
     vec3 lightDir = normalize(alight.position - aPosition);
+    vec3 viewDir = normalize(aViewDir);
+    vec3 halfwayDir = normalize(lightDir + viewDir);
+    
+    // Diffuse
     float diff = max(dot(aNormal, lightDir), 0.0);
-    vec3 reflectDir = reflect(-lightDir, aNormal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2.0);
-
+    
+    // Specular (Blinn-Phong)
+    float spec = pow(max(dot(aNormal, halfwayDir), 0.0), 32.0);
+    
+    // Attenuation
     float distance = length(alight.position - aPosition);
-
-    float constant = 1.0f;
-    float linear = 0.09f;
-    float quadratic = 0.032f;
-    float attenuation = 1.0 / (constant + linear * distance + quadratic * (distance * distance));
-
-    vec3 ambient = alight.color * 0.2;
-    vec3 diffuse = alight.color * diff;
-    vec3 specular = 0.1 * spec * alight.color;
-    ambient *= attenuation;
-    diffuse *= attenuation;
-    specular *= attenuation;
-
-    return (ambient + diffuse + specular);
+    float attenuation = clamp(1.0 - distance/float(alight.range), 0.0, 1.0);
+    attenuation *= attenuation * 1.0 / (distance * distance + 1.0);
+    
+    // Combine all components and apply attenuation & intensity
+    vec3 ambient = alight.color * 0.1;
+    vec3 diffuse = alight.color * diff * 0.8;
+    vec3 specular = alight.color * spec * 0.5;
+    
+    vec3 result = (ambient + diffuse + specular) * attenuation;
+    return result * float(alight.intensity);
 }
 
 vec3 CalcDirLight(Light alight, vec3 aNormal, vec3 aViewDir)
 {
-    vec3 viewDir = normalize(aViewDir);
-    vec3 lightDir = normalize(-alight.direction);
+    vec3 lightDir = -normalize(alight.direction); // Ensure direction is normalized
+    vec3 halfwayDir = normalize(lightDir + normalize(aViewDir));
+    
     float diff = max(dot(aNormal, lightDir), 0.0);
-    vec3 reflectDir = reflect(-lightDir, aNormal);
-    float spec = pow(max(dot(viewDir, reflectDir), 0.0), 2.0);
-
-    vec3 ambient = alight.color * 0.2;
-    vec3 diffuse = alight.color * diff;
-    vec3 specular = 0.1 * spec * alight.color;
-
-    return (ambient + diffuse + specular);
+    float spec = pow(max(dot(aNormal, halfwayDir), 0.0), 64.0);
+    
+    // Apply intensity to all components
+    vec3 result = alight.color * (0.1 + diff * 0.7 + spec * 0.2);
+    return result * float(alight.intensity);
 }
 
 void main()

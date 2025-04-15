@@ -14,6 +14,8 @@ struct Light {
     vec3 color;
     vec3 direction;
     vec3 position;
+    int intensity;
+    int range;
 };
 
 layout(binding = 0, std140) uniform GlobalParams 
