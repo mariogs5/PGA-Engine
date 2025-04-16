@@ -130,8 +130,13 @@ void CreateDefaultLights(App* app)
     app->lights.clear();
 
     // Name / Type / Color / Direction / Position / Intensity / Range
-    CreateDirectionalLight(app, "Sun", vec3(0.9f, 0.85f, 0.7f), vec3(-0.5f, -1.0f, 0.2f), 1.2f);
-    CreatePointLight(app, "Point 1", vec3(1.0f, 1.0f, 1.0f), vec3(0.0f, 2.0f, 0.0f), 5.0f, 3.0f);
+    CreateDirectionalLight(app, "Directional", vec3(0.9f, 0.85f, 0.7f), vec3(-0.5f, -1.0f, 0.2f), 1.2f);
+    CreatePointLight(app, "Patrick Point", vec3(1.0f, 1.0f, 1.0f), vec3(0.0f, 5.0f, 0.0f), 70.0f, 9.0f);
+    CreatePointLight(app, "Repo Point", vec3(1.0f, 1.0f, 1.0f), vec3(3.0f, 5.0f, 7.0f), 70.0f, 9.0f);
+    CreatePointLight(app, "Cube Point", vec3(1.0f, 1.0f, 1.0f), vec3(-7.0f, 5.0f, 0.0f), 70.0f, 9.0f);
+    CreatePointLight(app, "Sphere Point", vec3(1.0f, 1.0f, 1.0f), vec3(-3.0f, 5.0f, 7.0f), 70.0f, 9.0f);
+    CreatePointLight(app, "Cone Point", vec3(1.0f, 1.0f, 1.0f), vec3(7.0f, 5.0f, 0.0f), 70.0f, 9.0f);
+    CreatePointLight(app, "Torus Point", vec3(1.0f, 1.0f, 1.0f), vec3(0.0f, 5.0f, -10.0f), 70.0f, 9.0f);
 
     app->UpdateLights(app);
 }
@@ -140,6 +145,9 @@ void CreateLightStressTest(App* app)
 {
     app->lights.clear();
     
+    CreateDirectionalLight(app, "Directional 1", vec3(0.9f, 0.85f, 0.7f), vec3(-0.5f, 1.0f, 0.2f), 1.2f);
+    CreateDirectionalLight(app, "Directional 2", vec3(0.9f, 0.85f, 0.7f), vec3(-0.5f, 1.0f, 0.2f), 1.2f);
+
     int gridSize = 20;
     float totalSpan = 30.0f;          
     float spacing = totalSpan / (gridSize - 1);
@@ -950,6 +958,7 @@ void ImGuiLightTab(App* app)
         {
             ImGui::Text(light.name.c_str());
             vec3 checkVector;
+            int checkInt;
 
             ImGui::PushID(&light);
             float color[3] = { light.color.x, light.color.y ,light.color.z };
@@ -984,6 +993,26 @@ void ImGuiLightTab(App* app)
                 if (checkVector != light.position)
                 {
                     light.position = checkVector;
+                    lightChanged = true;
+                }
+
+                int intensity = light.intensity;
+                ImGui::DragInt("Intensity", &intensity, 1.0f, 1, 255);
+                checkInt = intensity;
+
+                if (checkInt != light.intensity)
+                {
+                    light.intensity = checkInt;
+                    lightChanged = true;
+                }
+
+                int range = light.range;
+                ImGui::DragInt("Range", &range, 1.0f, 1, 50);
+                checkInt = range;
+
+                if(checkInt != light.range)
+                {
+                    light.range = checkInt;
                     lightChanged = true;
                 }
             }
