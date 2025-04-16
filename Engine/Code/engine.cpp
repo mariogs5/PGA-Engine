@@ -30,13 +30,13 @@ void CreateEntity(App* app, u32 modelIndex, u32 textureIndex, glm::vec3 pos, glm
 void CreateEntities(App* app) 
 {
     // --- Default textures --- //
-    app->diceTexIdx = LoadTexture2D(app, "dice.png");
-    app->whiteTexIdx = LoadTexture2D(app, "color_white.png");
-    app->blackTexIdx = LoadTexture2D(app, "color_black.png");
-    app->normalTexIdx = LoadTexture2D(app, "color_normal.png");
-    app->magentaTexIdx = LoadTexture2D(app, "color_magenta.png");
-    app->greenTexIdx = LoadTexture2D(app, "color_green.png");
-    app->skyBlueTexIdx = LoadTexture2D(app, "color_skyblue.png");
+    app->diceTexIdx = LoadTexture2D(app, "Textures/dice.png");
+    app->whiteTexIdx = LoadTexture2D(app, "Textures/color_white.png");
+    app->blackTexIdx = LoadTexture2D(app, "Textures/color_black.png");
+    app->normalTexIdx = LoadTexture2D(app, "Textures/color_normal.png");
+    app->magentaTexIdx = LoadTexture2D(app, "Textures/color_magenta.png");
+    app->greenTexIdx = LoadTexture2D(app, "Textures/color_green.png");
+    app->skyBlueTexIdx = LoadTexture2D(app, "Textures/color_skyblue.png");
 
     Program& ModelProgram = app->programs[app->texturedMeshProgramIdx];
 
