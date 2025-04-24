@@ -102,6 +102,7 @@ void main()
                 if(uLight[i].type == 0)
                 {
                     lightResult += CalcDirLight(uLight[i], Normal, ViewDir);
+                    // lightResult * SSAO
                 }
                 else if(uLight[i].type == 1)
                 {
